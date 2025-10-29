@@ -1,0 +1,1206 @@
+{
+	"info": {
+		"_postman_id": "333e0b6b-742b-4a35-9425-22aa4dbfa88b",
+		"name": "Solana Wallet Testing - Complete LedgerX Backend APIs",
+		"description": "Complete collection for ALL Solana APIs: authentication, wallet management, financial transactions, data indexing, background jobs, gain/loss calculations, portfolio analytics, and webhooks",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "14691579"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "1. Get Login Challenge (Solana)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"address\": \"{{solana_address}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/authorize",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"authorize"
+							]
+						},
+						"description": "Get login challenge message for Solana wallet. Use this message to sign with your Solana wallet (Phantom, Solflare, etc.)"
+					},
+					"response": []
+				},
+				{
+					"name": "2. Login with Solana Wallet",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.accessToken) {",
+									"        pm.collectionVariables.set('jwt_token', response.accessToken);",
+									"        console.log('JWT Token saved:', response.accessToken);",
+									"    }",
+									"    if (response.member && response.member.organizationId) {",
+									"        pm.collectionVariables.set('organization_id', response.member.organizationId);",
+									"        console.log('Organization ID saved:', response.member.organizationId);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"address\": \"{{solana_address}}\",\n  \"message\": \"REPLACE_WITH_CHALLENGE_MESSAGE_FROM_STEP_1\",\n  \"signature\": \"REPLACE_WITH_WALLET_SIGNATURE\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login with Solana wallet signature. Replace the message with the challenge from step 1, and signature with your wallet's signature of that message."
+					},
+					"response": []
+				}
+			],
+			"description": "Authentication flow for Solana wallets using wallet signature verification"
+		},
+		{
+			"name": "Wallet Management",
+			"item": [
+				{
+					"name": "1. Get Wallet Groups",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.length > 0) {",
+									"        pm.collectionVariables.set('wallet_group_id', response.data[0].publicId);",
+									"        console.log('Wallet Group ID saved:', response.data[0].publicId);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/wallet-groups",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"wallet-groups"
+							]
+						},
+						"description": "Get all wallet groups for the organization. First group will be auto-saved for wallet creation."
+					},
+					"response": []
+				},
+				{
+					"name": "2. Create Solana Wallet",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.publicId) {",
+									"        pm.collectionVariables.set('wallet_public_id', response.publicId);",
+									"        console.log('Wallet Public ID saved:', response.publicId);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"My Solana Wallet\",\n  \"address\": \"{{solana_address}}\",\n  \"sourceType\": \"sol\",\n  \"walletGroupId\": \"{{wallet_group_id}}\",\n  \"supportedBlockchains\": [\"solana\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/wallets",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"wallets"
+							]
+						},
+						"description": "Import/create a new Solana wallet in the system"
+					},
+					"response": []
+				},
+				{
+					"name": "3. Get All Wallets",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/wallets",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"wallets"
+							]
+						},
+						"description": "List all wallets in the organization"
+					},
+					"response": []
+				},
+				{
+					"name": "4. Get Specific Wallet",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/wallets/{{wallet_public_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"wallets",
+								"{{wallet_public_id}}"
+							]
+						},
+						"description": "Get details of a specific wallet"
+					},
+					"response": []
+				},
+				{
+					"name": "5. Delete Wallet",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/wallets/{{wallet_public_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"wallets",
+								"{{wallet_public_id}}"
+							]
+						},
+						"description": "Delete a specific wallet to test re-import flow"
+					},
+					"response": []
+				},
+				{
+					"name": "6. Dashboard Summary (KPIs)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/wallets/{{wallet_public_id}}/dashboard-summary",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"wallets",
+								"{{wallet_public_id}}",
+								"dashboard-summary"
+							]
+						},
+						"description": "KPIs for dashboard cards: total transactions, last transaction date, SOL price (USD), and total portfolio value (USD)"
+					},
+					"response": []
+				},
+				{
+					"name": "7. Token Distribution",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/wallets/{{wallet_public_id}}/token-distribution",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"wallets",
+								"{{wallet_public_id}}",
+								"token-distribution"
+							]
+						},
+						"description": "Current wallet token USD distribution for donut/bar charts"
+					},
+					"response": []
+				},
+				{
+					"name": "8. Monthly Transactions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/wallets/{{wallet_public_id}}/monthly-transactions?months=12",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"wallets",
+								"{{wallet_public_id}}",
+								"monthly-transactions"
+							],
+							"query": [
+								{ "key": "months", "value": "12" }
+							]
+						},
+						"description": "Monthly transaction counts aggregated for line chart (use months query param)"
+					},
+					"response": []
+				},
+				{
+					"name": "9. Price History",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/wallets/{{wallet_public_id}}/price-history?symbol=SOL&fiat=USD&days=90&chain=solana&interval=1d&address=So11111111111111111111111111111111111111112",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"wallets",
+								"{{wallet_public_id}}",
+								"price-history"
+							],
+							"query": [
+								{ "key": "symbol", "value": "SOL" },
+								{ "key": "fiat", "value": "USD" },
+								{ "key": "days", "value": "90" },
+								{ "key": "chain", "value": "solana" },
+								{ "key": "interval", "value": "1d" },
+								{ "key": "address", "value": "So11111111111111111111111111111111111111112" }
+							]
+						},
+						"description": "Token price history timeseries fetched from Birdeye (requires BIRDEYE_API_KEY). Defaults to Wrapped SOL mint on Solana."
+					},
+					"response": []
+				}
+			],
+			"description": "Wallet import and management operations"
+		},
+		{
+			"name": "🆕 Financial Transactions (Background Jobs)",
+			"item": [
+				{
+					"name": "Start Import Job",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test response and extract job_id",
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has job_id', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('job_id');",
+									"    pm.collectionVariables.set('job_id', responseJson.job_id);",
+									"    console.log('Job ID saved:', responseJson.job_id);",
+									"});",
+									"",
+									"pm.test('Job status is queued or processing', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(['queued', 'processing']).to.include(responseJson.status);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/financial-transactions/import/{{wallet_public_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"financial-transactions",
+								"import",
+								"{{wallet_public_id}}"
+							]
+						},
+						"description": "Start background job to import Solana transactions for a wallet"
+					},
+					"response": []
+				},
+				{
+					"name": "Check Job Status",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Job has valid status', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(['queued', 'processing', 'completed', 'failed']).to.include(responseJson.status);",
+									"});",
+									"",
+									"// Auto-monitoring logic",
+									"const responseJson = pm.response.json();",
+									"if (responseJson.status === 'processing' || responseJson.status === 'queued') {",
+									"    console.log('⏳ Job still processing, current progress:', responseJson.progress || 0);",
+									"    console.log('💡 Tip: Run this request again to check progress');",
+									"} else if (responseJson.status === 'completed') {",
+									"    console.log('✅ Job completed successfully!');",
+									"    console.log('📊 Total processed:', responseJson.total_processed || 'N/A');",
+									"    pm.test('Job completed successfully', function () {",
+									"        pm.expect(responseJson.status).to.equal('completed');",
+									"    });",
+									"} else if (responseJson.status === 'failed') {",
+									"    console.log('❌ Job failed:', responseJson.error_message);",
+									"    console.log('🔍 Check logs for details');",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/financial-transactions/import/status/{{job_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"financial-transactions",
+								"import",
+								"status",
+								"{{job_id}}"
+							]
+						},
+						"description": "Check status of import job with auto-monitoring"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Wallet Transactions",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has transactions array', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('transactions');",
+									"    pm.expect(responseJson.transactions).to.be.an('array');",
+									"});",
+									"",
+									"pm.test('Pagination info present', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('pagination');",
+									"    pm.expect(responseJson.pagination).to.have.property('total');",
+									"});",
+									"",
+									"// Enhanced logging",
+									"const responseJson = pm.response.json();",
+									"console.log('📋 Transaction Summary:');",
+									"console.log('   • Found:', responseJson.transactions.length, 'transactions this page');",
+									"console.log('   • Total:', responseJson.pagination.total, 'transactions');",
+									"console.log('   • Page:', Math.floor(responseJson.pagination.offset / responseJson.pagination.limit) + 1);",
+									"",
+									"// Show sample transactions",
+									"if (responseJson.transactions.length > 0) {",
+									"    console.log('📄 Sample transactions:');",
+									"    responseJson.transactions.slice(0, 3).forEach((tx, i) => {",
+									"        console.log(`   ${i+1}. ${tx.transaction_type} - ${tx.token_symbol} ${tx.amount}`);",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/financial-transactions/wallet/{{wallet_public_id}}?limit=100&offset=0",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"financial-transactions",
+								"wallet",
+								"{{wallet_public_id}}"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						},
+						"description": "Get paginated list of financial transactions for a wallet with enhanced logging"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Wallet Transactions (New API)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has transactions array', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('transactions');",
+									"    pm.expect(responseJson.transactions).to.be.an('array');",
+									"});",
+									"",
+									"pm.test('Pagination info present', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('pagination');",
+									"    pm.expect(responseJson.pagination).to.have.property('total');",
+									"});",
+									"",
+									"// Enhanced logging",
+									"const responseJson = pm.response.json();",
+									"console.log('📋 Transaction Summary:');",
+									"console.log('   • Found:', responseJson.transactions.length, 'transactions this page');",
+									"console.log('   • Total:', responseJson.pagination.total, 'transactions');",
+									"console.log('   • Page:', Math.floor(responseJson.pagination.offset / responseJson.pagination.limit) + 1);",
+									"",
+									"// Show sample transactions",
+									"if (responseJson.transactions.length > 0) {",
+									"    console.log('📄 Sample transactions:');",
+									"    responseJson.transactions.slice(0, 3).forEach((tx, i) => {",
+									"        console.log(`   ${i+1}. ${tx.transaction_type} - ${tx.token_symbol} ${tx.amount}`);",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/financial-transactions?limit=100&offset=0",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"financial-transactions"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						},
+						"description": "Get paginated list of financial transactions for a wallet with enhanced logging"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Wallet Balances (New API)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has balances array', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('balances');",
+									"    pm.expect(responseJson.balances).to.be.an('array');",
+									"});",
+									"",
+									"// Enhanced balance logging",
+									"const responseJson = pm.response.json();",
+									"console.log('💰 Wallet Balance Summary:');",
+									"console.log('   • Total tokens:', responseJson.balances.length);",
+									"",
+									"if (responseJson.balances.length > 0) {",
+									"    console.log('💎 Token Balances:');",
+									"    responseJson.balances.forEach(balance => {",
+									"        const amount = parseFloat(balance.balance).toFixed(6);",
+									"        console.log(`   • ${balance.token_symbol}: ${amount} (${balance.token_name})`);",
+									"    });",
+									"",
+									"    // Calculate total tokens with balance > 0",
+									"    const nonZeroBalances = responseJson.balances.filter(b => parseFloat(b.balance) > 0);",
+									"    console.log(`   ✨ ${nonZeroBalances.length} tokens with positive balance`);",
+									"} else {",
+									"    console.log('   📭 No balances found');",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/financial-transactions/wallet/{{wallet_public_id}}/balances",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"financial-transactions",
+								"wallet",
+								"{{wallet_public_id}}",
+								"balances"
+							]
+						},
+						"description": "Get current token balances for a wallet with enhanced logging"
+					},
+					"response": []
+				}
+			],
+			"description": "NEW: Background job management for importing Solana transactions with comprehensive status tracking"
+		},
+		{
+			"name": "Solana Data Indexing",
+			"item": [
+				{
+					"name": "1. Manual Trigger Solana Indexing",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/wallets/{{wallet_public_id}}/trigger-solana-indexing",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"wallets",
+								"{{wallet_public_id}}",
+								"trigger-solana-indexing"
+							]
+						},
+						"description": "Manually trigger Solana indexing for a specific wallet"
+					},
+					"response": []
+				},
+				{
+					"name": "2. Check Indexing Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/data-onchain-ingestor/status/{{solana_address}}?chain_id={{solana_chain_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"data-onchain-ingestor",
+								"status",
+								"{{solana_address}}"
+							],
+							"query": [
+								{
+									"key": "chain_id",
+									"value": "{{solana_chain_id}}"
+								}
+							]
+						},
+						"description": "Check the status of ongoing indexing process"
+					},
+					"response": []
+				},
+				{
+					"name": "3. Get Indexed Transactions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/data-onchain-ingestor/transactions/{{solana_address}}?chain_id={{solana_chain_id}}&exclude_wsol=false&limit=100&offset=0",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"data-onchain-ingestor",
+								"transactions",
+								"{{solana_address}}"
+							],
+							"query": [
+								{
+									"key": "chain_id",
+									"value": "{{solana_chain_id}}"
+								},
+								{
+									"key": "exclude_wsol",
+									"value": "false",
+									"description": "Set to true to exclude WSOL transactions"
+								},
+								{
+									"key": "limit",
+									"value": "100"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						},
+						"description": "Retrieve indexed transaction data for the Solana address"
+					},
+					"response": []
+				},
+				{
+					"name": "4. Bulk Index Multiple Addresses",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"addresses\": [\n    \"{{solana_address}}\"\n  ],\n  \"chain_id\": \"{{solana_chain_id}}\",\n  \"sync_mode\": \"INCREMENTAL\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/data-onchain-ingestor/solana/bulk-index",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"data-onchain-ingestor",
+								"solana",
+								"bulk-index"
+							]
+						},
+						"description": "Index multiple Solana addresses in bulk"
+					},
+					"response": []
+				}
+			],
+			"description": "Solana blockchain data indexing operations using the data-onchain-ingestor service"
+		},
+		{
+			"name": "Wallet Sync Operations",
+			"item": [
+				{
+					"name": "1. Sync Specific Wallet",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/wallets/{{wallet_public_id}}/sync",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"wallets",
+								"{{wallet_public_id}}",
+								"sync"
+							]
+						},
+						"description": "Trigger incremental sync for a specific wallet"
+					},
+					"response": []
+				},
+				{
+					"name": "2. Sync Pending Transactions",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/wallets/{{wallet_public_id}}/sync-pending",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"wallets",
+								"{{wallet_public_id}}",
+								"sync-pending"
+							]
+						},
+						"description": "Sync pending transactions for a specific wallet"
+					},
+					"response": []
+				},
+				{
+					"name": "3. Sync All Wallets",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/wallets/sync",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"wallets",
+								"sync"
+							]
+						},
+						"description": "Trigger sync for all wallets in the organization"
+					},
+					"response": []
+				}
+			],
+			"description": "Wallet synchronization operations"
+		},
+		{
+			"name": "Blockchain Info",
+			"item": [
+				{
+					"name": "Get Supported Blockchains",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/blockchains",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"blockchains"
+							]
+						},
+						"description": "Get list of supported blockchains including Solana networks"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Supported Cryptocurrencies",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/cryptocurrencies",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"cryptocurrencies"
+							]
+						},
+						"description": "Get list of supported cryptocurrencies including SOL and SPL tokens"
+					},
+					"response": []
+				}
+			],
+			"description": "Get blockchain and cryptocurrency information"
+		},
+		{
+			"name": "🆕 System Health & Status",
+			"item": [
+				{
+					"name": "Health Check",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Health status is ok', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.status).to.equal('ok');",
+									"});",
+									"",
+									"// Enhanced system info logging",
+									"const responseJson = pm.response.json();",
+									"console.log('🏥 System Health Status:', responseJson.status);",
+									"if (responseJson.info) {",
+									"    console.log('💾 Database:', responseJson.info.database?.status || 'unknown');",
+									"    console.log('🧠 Memory Usage:', responseJson.info.memory || 'unknown');",
+									"    console.log('⏱️ Uptime:', responseJson.info.uptime || 'unknown');",
+									"}",
+									"if (responseJson.details) {",
+									"    console.log('📋 Service Details:');",
+									"    Object.entries(responseJson.details).forEach(([service, info]) => {",
+									"        console.log(`   • ${service}: ${info.status || 'unknown'}`);",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "Check comprehensive system health status with detailed service information"
+					},
+					"response": []
+				}
+			],
+			"description": "System health checks and monitoring endpoints"
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{jwt_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Enhanced pre-request logging",
+					"console.log('🚀 Making request:', pm.request.name);",
+					"console.log('🔗 URL:', pm.request.url.toString());",
+					"",
+					"// Validate required environment variables",
+					"const requiredVars = ['base_url', 'organization_id', 'jwt_token', 'wallet_public_id'];",
+					"const missingVars = requiredVars.filter(varName => !pm.collectionVariables.get(varName) && !pm.environment.get(varName));",
+					"",
+					"if (missingVars.length > 0) {",
+					"    console.error('❌ Missing required variables:', missingVars.join(', '));",
+					"    console.log('💡 Please set these variables in your collection or environment.');",
+					"} else {",
+					"    console.log('✅ All required variables are set');",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Enhanced response logging",
+					"const responseTime = pm.response.responseTime;",
+					"console.log('⏱️ Response time:', responseTime + 'ms');",
+					"",
+					"// Enhanced status logging with emojis",
+					"if (pm.response.code >= 200 && pm.response.code < 300) {",
+					"    console.log('✅ Request successful:', pm.response.code, pm.response.status);",
+					"} else if (pm.response.code >= 400 && pm.response.code < 500) {",
+					"    console.log('⚠️ Client error:', pm.response.code, pm.response.status);",
+					"    try {",
+					"        const errorBody = pm.response.json();",
+					"        console.log('📋 Error details:', errorBody.message || errorBody);",
+					"    } catch (e) {",
+					"        console.log('📋 Error response:', pm.response.text());",
+					"    }",
+					"} else if (pm.response.code >= 500) {",
+					"    console.log('❌ Server error:', pm.response.code, pm.response.status);",
+					"    console.log('🔍 Check server logs for details');",
+					"}",
+					"",
+					"// Performance monitoring",
+					"pm.test('Response time is reasonable', function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(30000); // 30 seconds max",
+					"});",
+					"",
+					"// Add response size info",
+					"const responseSize = pm.response.responseSize || 0;",
+					"if (responseSize > 0) {",
+					"    console.log('📦 Response size:', (responseSize / 1024).toFixed(2) + ' KB');",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000/api/v1"
+		},
+		{
+			"key": "jwt_token",
+			"value": "",
+			"description": {
+				"content": "JWT authentication token - set after login",
+				"type": "text/plain"
+			}
+		},
+		{
+			"key": "organization_id",
+			"value": "",
+			"description": {
+				"content": "Organization ID - auto-set after login",
+				"type": "text/plain"
+			}
+		},
+		{
+			"key": "wallet_group_id",
+			"value": "",
+			"description": {
+				"content": "Wallet group ID - auto-set from wallet groups endpoint",
+				"type": "text/plain"
+			}
+		},
+		{
+			"key": "wallet_public_id",
+			"value": "",
+			"description": {
+				"content": "Wallet public ID - auto-set after wallet creation",
+				"type": "text/plain"
+			}
+		},
+		{
+			"key": "job_id",
+			"value": "",
+			"description": {
+				"content": "Background job ID - auto-set when starting import jobs",
+				"type": "text/plain"
+			}
+		},
+		{
+			"key": "solana_address",
+			"value": "CuieVDEDtLo7FypA9SbLM9saXFdb1dsshEkyErMqkRQq",
+			"description": {
+				"content": "Solana wallet address for testing",
+				"type": "text/plain"
+			}
+		},
+		{
+			"key": "solana_chain_id",
+			"value": "solana-mainnet",
+			"description": {
+				"content": "Solana chain identifier",
+				"type": "text/plain"
+			}
+		},
+		{
+			"key": "transaction_id",
+			"value": "5YNmS1R9nNSCDzrZdYxP6L2wuCrGT1E8F4K6M3Qy9X7A",
+			"description": {
+				"content": "Sample Solana transaction hash for testing",
+				"type": "text/plain"
+			}
+		}
+	]
+}

@@ -1,0 +1,629 @@
+{
+	"info": {
+		"_postman_id": "balance-asset-apis-test-collection",
+		"name": "Balance & Asset APIs Testing",
+		"description": "Testing collection for Balance and Asset APIs with Solana support. Includes grouping, filtering, and search functionality for wallets, balances, and assets.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "14691579"
+	},
+	"item": [
+		{
+			"name": "Balance APIs",
+			"item": [
+				{
+					"name": "1. Get Balances (Group by Blockchain)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/balances?groupBy=blockchainId",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"balances"
+							],
+							"query": [
+								{
+									"key": "groupBy",
+									"value": "blockchainId"
+								}
+							]
+						},
+						"description": "Get organization balances grouped by blockchain ID. Returns total value and breakdown by each blockchain (Solana, Ethereum, etc.)."
+					},
+					"response": []
+				},
+				{
+					"name": "2. Get Balances (Group by Wallet & Blockchain)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/balances?groupBy=walletId&secondGroupBy=blockchainId",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"balances"
+							],
+							"query": [
+								{
+									"key": "groupBy",
+									"value": "walletId"
+								},
+								{
+									"key": "secondGroupBy",
+									"value": "blockchainId"
+								}
+							]
+						},
+						"description": "Get organization balances with hierarchical grouping: first by wallet ID, then by blockchain ID. Useful for wallet-specific blockchain breakdowns."
+					},
+					"response": []
+				},
+				{
+					"name": "3. Get Balances with Solana Filter",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/balances?blockchainIds=solana-mainnet&groupBy=blockchainId",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"balances"
+							],
+							"query": [
+								{
+									"key": "blockchainIds",
+									"value": "solana-mainnet"
+								},
+								{
+									"key": "groupBy",
+									"value": "blockchainId"
+								}
+							]
+						},
+						"description": "Get balances filtered to only Solana mainnet blockchain. Returns BONK, USDC, SOL, and JUP balances in development mode."
+					},
+					"response": []
+				},
+				{
+					"name": "4. Get Balances for Specific Wallets",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/balances?walletIds={{wallet_public_id}}&groupBy=walletId",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"balances"
+							],
+							"query": [
+								{
+									"key": "walletIds",
+									"value": "{{wallet_public_id}}"
+								},
+								{
+									"key": "groupBy",
+									"value": "walletId"
+								}
+							]
+						},
+						"description": "Get balances for specific wallet(s) grouped by wallet ID. Uses the wallet_public_id variable from previous wallet creation."
+					},
+					"response": []
+				},
+				{
+					"name": "5. Get Total Balances (No Grouping)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/balances",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"balances"
+							]
+						},
+						"description": "Get total organization balances without any grouping. Returns a single aggregated value across all wallets and blockchains."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Wallet APIs",
+			"item": [
+				{
+					"name": "1. Get All Wallets",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/wallets",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"wallets"
+							]
+						},
+						"description": "Get all wallets for the organization. Returns paginated list of wallets with their details, addresses, and supported blockchains."
+					},
+					"response": []
+				},
+				{
+					"name": "2. Get Solana Wallets Only",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/wallets?blockchainIds=solana-mainnet",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"wallets"
+							],
+							"query": [
+								{
+									"key": "blockchainIds",
+									"value": "solana-mainnet"
+								}
+							]
+						},
+						"description": "Get wallets filtered to only Solana mainnet blockchain. In development mode, returns test Solana wallets with realistic addresses."
+					},
+					"response": []
+				},
+				{
+					"name": "3. Get Wallets with Pagination",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/wallets?page=1&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"wallets"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Get wallets with pagination parameters. Useful for handling large numbers of wallets efficiently."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Asset APIs",
+			"item": [
+				{
+					"name": "1. Get All Assets",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/assets",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"assets"
+							]
+						},
+						"description": "Get all assets/cryptocurrencies held by the organization. Returns asset details with current balances, cost basis, and fiat values."
+					},
+					"response": []
+				},
+				{
+					"name": "2. Get Solana Assets Only",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/assets?blockchainIds=solana-mainnet",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"assets"
+							],
+							"query": [
+								{
+									"key": "blockchainIds",
+									"value": "solana-mainnet"
+								}
+							]
+						},
+						"description": "Get assets filtered to only Solana mainnet. In development mode, returns test data for BONK, USDC, SOL, and JUP with realistic values."
+					},
+					"response": []
+				},
+				{
+					"name": "3. Search Assets by Name/Symbol",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/assets?nameOrSymbol=BONK&blockchainIds=solana-mainnet",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"assets"
+							],
+							"query": [
+								{
+									"key": "nameOrSymbol",
+									"value": "BONK"
+								},
+								{
+									"key": "blockchainIds",
+									"value": "solana-mainnet"
+								}
+							]
+						},
+						"description": "Search for assets by name or symbol (e.g., BONK, SOL, USDC). Supports partial matching and case-insensitive search."
+					},
+					"response": []
+				},
+				{
+					"name": "4. Search Assets by Address",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/assets?nameOrSymbolOrAddress=DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"assets"
+							],
+							"query": [
+								{
+									"key": "nameOrSymbolOrAddress",
+									"value": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263"
+								}
+							]
+						},
+						"description": "Search for assets by mint address, name, or symbol. This example searches for BONK using its Solana mint address."
+					},
+					"response": []
+				},
+				{
+					"name": "5. Get Assets for Specific Wallets",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/assets?walletIds={{wallet_public_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"assets"
+							],
+							"query": [
+								{
+									"key": "walletIds",
+									"value": "{{wallet_public_id}}"
+								}
+							]
+						},
+						"description": "Get assets held by specific wallet(s). Uses the wallet_public_id variable to filter assets."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Combined Scenarios",
+			"item": [
+				{
+					"name": "1. Complete Portfolio Overview",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test script to validate portfolio data structure",
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has balance data', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('value');",
+									"    pm.expect(responseJson).to.have.property('fiatCurrency');",
+									"});",
+									"",
+									"pm.test('Response has groups when grouped by blockchain', function () {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson.groups) {",
+									"        pm.expect(responseJson.groups).to.be.an('object');",
+									"        console.log('📊 Balance groups found:', Object.keys(responseJson.groups));",
+									"    }",
+									"});",
+									"",
+									"// Log portfolio summary",
+									"const responseJson = pm.response.json();",
+									"console.log('💰 Total Portfolio Value:', responseJson.value, responseJson.fiatCurrency);",
+									"if (responseJson.groups) {",
+									"    Object.entries(responseJson.groups).forEach(([blockchain, data]) => {",
+									"        console.log(`🔗 ${blockchain}:`, data.value, data.fiatCurrency);",
+									"    });",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/balances?groupBy=blockchainId",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"balances"
+							],
+							"query": [
+								{
+									"key": "groupBy",
+									"value": "blockchainId"
+								}
+							]
+						},
+						"description": "Complete portfolio overview with test validation. Includes test scripts to validate response structure and log portfolio summary."
+					},
+					"response": []
+				},
+				{
+					"name": "2. Solana-Only Analysis",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test script for Solana-specific analysis",
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response contains Solana data', function () {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson.groups && responseJson.groups['solana-mainnet']) {",
+									"        pm.expect(responseJson.groups['solana-mainnet']).to.have.property('value');",
+									"        console.log('🟣 Solana Balance:', responseJson.groups['solana-mainnet'].value);",
+									"    }",
+									"});",
+									"",
+									"// Expected Solana tokens in development mode",
+									"const expectedTokens = ['BONK', 'USDC', 'SOL', 'JUP'];",
+									"console.log('🪙 Expected Solana tokens:', expectedTokens.join(', '));",
+									"console.log('🧪 Development mode should return test data for these tokens');"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/balances?blockchainIds=solana-mainnet&groupBy=blockchainId",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"balances"
+							],
+							"query": [
+								{
+									"key": "blockchainIds",
+									"value": "solana-mainnet"
+								},
+								{
+									"key": "groupBy",
+									"value": "blockchainId"
+								}
+							]
+						},
+						"description": "Solana-focused analysis with validation for expected test tokens (BONK, USDC, SOL, JUP)."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Pre-request validation",
+					"const requiredVars = ['base_url', 'jwt_token', 'organization_id'];",
+					"const missingVars = requiredVars.filter(varName => !pm.collectionVariables.get(varName) && !pm.environment.get(varName));",
+					"",
+					"if (missingVars.length > 0) {",
+					"    console.error('❌ Missing required variables:', missingVars.join(', '));",
+					"    console.log('💡 Please set these variables in your collection or environment.');",
+					"} else {",
+					"    console.log('✅ All required variables are set');",
+					"}",
+					"",
+					"// Log current environment info",
+					"console.log('🌐 Base URL:', pm.collectionVariables.get('base_url') || pm.environment.get('base_url'));",
+					"console.log('🏢 Organization ID:', pm.collectionVariables.get('organization_id') || pm.environment.get('organization_id'));"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global test validation",
+					"const responseTime = pm.response.responseTime;",
+					"const responseSize = pm.response.responseSize;",
+					"",
+					"if (responseTime) {",
+					"    console.log('⏱️ Response time:', responseTime + ' ms');",
+					"}",
+					"",
+					"if (responseSize) {",
+					"    console.log('📦 Response size:', (responseSize / 1024).toFixed(2) + ' KB');",
+					"}",
+					"",
+					"// Log development mode status",
+					"console.log('🧪 Development Mode: Test data will be returned for Solana endpoints');"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000/api/v1",
+			"description": {
+				"content": "Base URL for the LedgerX API",
+				"type": "text/plain"
+			}
+		},
+		{
+			"key": "jwt_token",
+			"value": "",
+			"description": {
+				"content": "JWT token for authentication - auto-set after login",
+				"type": "text/plain"
+			}
+		},
+		{
+			"key": "organization_id",
+			"value": "",
+			"description": {
+				"content": "Organization ID - auto-set after login",
+				"type": "text/plain"
+			}
+		},
+		{
+			"key": "wallet_public_id",
+			"value": "",
+			"description": {
+				"content": "Wallet public ID - auto-set after wallet creation",
+				"type": "text/plain"
+			}
+		}
+	]
+}

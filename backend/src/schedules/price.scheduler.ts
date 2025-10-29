@@ -1,0 +1,106 @@
+import { Injectable } from '@nestjs/common'
+import { EventEmitter2 } from '@nestjs/event-emitter'
+import { Cron } from '@nestjs/schedule'
+import Decimal from 'decimal.js'
+import { FinancialTransformationsEventType } from '../domain/financial-transformations/events/events'
+import { PricesService } from '../prices/prices.service'
+import { FeatureFlagsEntityService } from '../shared/entity-services/feature-flags/feature-flags.entity-service'
+import { FeatureFlagOption } from '../shared/entity-services/feature-flags/interfaces'
+import { FinancialTransactionChild } from '../shared/entity-services/financial-transactions/financial-transaction-child.entity'
+import { FinancialTransactionsEntityService } from '../shared/entity-services/financial-transactions/financial-transactions.entity-service'
+import { InvitationsEntityService } from '../shared/entity-services/invitations/invitations.entity-service'
+import { dateHelper } from '../shared/helpers/date.helper'
+import { LoggerService } from '../shared/logger/logger.service'
+
+@Injectable()
+export class PriceScheduler {
+  constructor(
+    private pricesDomainService: PricesService,
+    private loggerService: LoggerService,
+    private invitationsService: InvitationsEntityService,
+    private featureFlagsEntityService: FeatureFlagsEntityService,
+    private financialTransactionsEntityService: FinancialTransactionsEntityService,
+    private eventEmitter: EventEmitter2
+  ) {}
+
+  // From coingecko: The last completed UTC day (00:00) is available 35 minutes after midnight on the next UTC day (00:35).
+  // DISABLED EVM CRONJOB: // DISABLED EVM CRONJOB: @Cron('15 2 * * *', { utcOffset: 0 })
+  async updateClosingPriceDailyJob() {
+    const isFeatureEnabled = await this.featureFlagsEntityService.isFeatureEnabled(FeatureFlagOption.COINGECKO_EOD_JOB)
+    if (!isFeatureEnabled) {
+      return
+    }
+
+    let cryptocurrencyToFiatMap: { [cryptocurrencyName: string]: { [lowerCaseCurrency: string]: number } } = {}
+
+    console.log('scanPricesDaily job starts...', dateHelper.getUTCTimestamp().toLocaleString())
+    try {
+      cryptocurrencyToFiatMap = await this.pricesDomainService.syncLastCompletedDay()
+    } catch (error) {
+      this.loggerService.error(error)
+    }
+
+    if (cryptocurrencyToFiatMap && Object.keys(cryptocurrencyToFiatMap).length) {
+      let skip = 0
+      let batchSize = 500
+      const parentIdSet: Set<string> = new Set<string>()
+      let financialTransactionChildren: FinancialTransactionChild[] = []
+
+      do {
+        financialTransactionChildren = await this.financialTransactionsEntityService.getChildrenByValueDateBatched({
+          date: dateHelper.getUTCTimestampHoursAgo(24),
+          skip,
+          take: batchSize
+        })
+
+        if (financialTransactionChildren.length) {
+          for (const child of financialTransactionChildren) {
+            if (!child.financialTransactionChildMetadata.fiatAmountPerUnitUpdatedBy.startsWith('account_')) {
+              const cryptocurrencyName = child.cryptocurrency.name
+              const fiatCurrency = child.financialTransactionChildMetadata.fiatCurrency
+              const newPrice = cryptocurrencyToFiatMap[cryptocurrencyName][fiatCurrency.toLowerCase()]
+
+              const updatedMetadata =
+                this.financialTransactionsEntityService.generatePartialChildMetadataForPriceUpdate({
+                  cryptocurrencyAmount: child.cryptocurrencyAmount,
+                  pricePerUnit: new Decimal(newPrice),
+                  fiatCurrency,
+                  updatedBy: `service_closing_price_eod_job`
+                })
+
+              await this.financialTransactionsEntityService.updateChildMetadata(
+                child.financialTransactionChildMetadata.id,
+                updatedMetadata
+              )
+
+              parentIdSet.add(child.financialTransactionParent.id)
+            }
+          }
+        }
+
+        skip += batchSize
+      } while (financialTransactionChildren.length === batchSize)
+
+      if (parentIdSet.size) {
+        for (const parentId of parentIdSet) {
+          this.eventEmitter.emit(
+            FinancialTransformationsEventType.OPERATIONAL_TRANSFORMATION_RECALCULATE_PRICES_FOR_TRANSACTION_PARENT,
+            parentId
+          )
+        }
+      }
+    }
+
+    console.log('scanPricesDaily job ends...', dateHelper.getUTCTimestamp().toLocaleString())
+  }
+
+  //Every hour
+  // DISABLED EVM CRONJOB: // DISABLED EVM CRONJOB: @Cron('0 * * * *', { utcOffset: 0 })
+  async updateExpiredInvitations() {
+    try {
+      await this.invitationsService.updateStatusForExpired()
+    } catch (error) {
+      this.loggerService.error(error)
+    }
+  }
+}

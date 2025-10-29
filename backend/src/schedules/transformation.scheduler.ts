@@ -1,0 +1,248 @@
+import { Injectable } from '@nestjs/common'
+import { EventEmitter2 } from '@nestjs/event-emitter'
+import { Cron } from '@nestjs/schedule'
+import { setTimeout } from 'timers/promises'
+import { TaskStatusEnum, TaskSyncType } from '../core/events/event-types'
+import {
+  FinancialTransformationsEventType,
+  IngestionEventType,
+  IngestionExecuteProcessEvent,
+  IngestionSyncEvent
+} from '../domain/financial-transformations/events/events'
+import { IngestionsService } from '../domain/financial-transformations/ingestions.service'
+import { AdditionalTransformationPerWalletGroupTasksEntityService } from '../shared/entity-services/additional-transformation-per-wallet-group-tasks/additional-transformation-per-wallet-group-tasks.entity-service'
+import { AdditionalTransformationPerWalletTasksEntityService } from '../shared/entity-services/additional-transformation-per-wallet-tasks/additional-transformation-per-wallet-tasks.entity-service'
+import { CoreTransformationTasksEntityService } from '../shared/entity-services/core-transformation-tasks/core-transformation-tasks.entity-service'
+import { FeatureFlagsEntityService } from '../shared/entity-services/feature-flags/feature-flags.entity-service'
+import { OrganizationFullSyncRequestsEntityService } from '../shared/entity-services/organization-full-sync-requests/organization-full-sync-requests.entity.service'
+import { OrganizationsEntityService } from '../shared/entity-services/organizations/organizations.entity-service'
+import { PreprocessRawTasksEntityService } from '../shared/entity-services/preprocess-raw-tasks/preprocess-raw-tasks.entity-service'
+import { WalletsEntityService } from '../shared/entity-services/wallets/wallets.entity-service'
+import { dateHelper } from '../shared/helpers/date.helper'
+import { LoggerService } from '../shared/logger/logger.service'
+import { WalletsDomainService } from '../wallets/wallets.domain.service'
+
+@Injectable()
+export class TransformationScheduler {
+  constructor(
+    private logger: LoggerService,
+    private eventEmitter: EventEmitter2,
+    private ingestionsService: IngestionsService,
+    private preprocessRawTasksService: PreprocessRawTasksEntityService,
+    private coreTransformationTasksService: CoreTransformationTasksEntityService,
+    private additionalTransformationPerWalletTasksService: AdditionalTransformationPerWalletTasksEntityService,
+    private additionalTransformationPerWalletGroupTasksService: AdditionalTransformationPerWalletGroupTasksEntityService,
+    private featureFlagsService: FeatureFlagsEntityService,
+    private walletsService: WalletsEntityService,
+    private organizationsEntityService: OrganizationsEntityService,
+    private walletsDomainService: WalletsDomainService,
+    private organizationFullSyncRequestsEntityService: OrganizationFullSyncRequestsEntityService
+  ) {}
+
+  // DISABLED: EVM Cronjob - Retry failed ingestion tasks
+  // // DISABLED EVM CRONJOB: @Cron('*/2 * * * *', { utcOffset: 0 })
+  async retryFailedIngestionTasks() {
+    // this.logger.info('Initiate job for retry failed ingestion tasks starts...', dateHelper.getUTCTimestamp())
+
+    const ingestionWorkflows = await this.ingestionsService.getWorkflowsReadyForRetry()
+    this.logger.info('Amounts of failed ingestion workflows: ', ingestionWorkflows.length)
+
+    for (const ingestionWorkflow of ingestionWorkflows) {
+      const status = await this.ingestionsService.updateWorkflowStatusFromProcesses(ingestionWorkflow.id)
+
+      if (status === TaskStatusEnum.CREATED) {
+        this.eventEmitter.emit(IngestionEventType.INGESTION_SYNC_ADDRESS, new IngestionSyncEvent(ingestionWorkflow.id))
+      }
+
+      if (status === TaskStatusEnum.RUNNING) {
+        // if status not running means, not all processes are finished, will be retried later under retryFailedProcessesTasks()
+        continue
+      }
+
+      //That is a temporary solution to avoid the rate limit of the API and prevent concurrency issues with creation sync tasks for the same address
+      //TODO: Can be removed later, after the implementation of locking mechanism for the sync tasks
+      await setTimeout(10000)
+    }
+  }
+
+  // DISABLED: EVM Cronjob - Retry failed processes
+  // // DISABLED EVM CRONJOB: @Cron('*/2 * * * *', { utcOffset: 0 })
+  async retryFailedProcessesTasks() {
+    // this.logger.info('Initiate job for retry failed ingestion processes starts...', dateHelper.getUTCTimestamp())
+
+    const ingestionProcesses = await this.ingestionsService.getFailedIngestionProcesses()
+
+    for (const failedIngestionTask of ingestionProcesses) {
+      this.eventEmitter.emit(
+        IngestionEventType.INGESTION_EXECUTE_SYNC_PROCESS,
+        new IngestionExecuteProcessEvent(failedIngestionTask.id)
+      )
+      //That is a temporary solution to avoid the rate limit of the API and prevent concurrency issues with creation sync tasks for the same address
+      //TODO: Can be removed later, after the implementation of locking mechanism for the sync tasks
+      await setTimeout(10000)
+    }
+  }
+
+  // DISABLED: EVM Cronjob - Migrate metadata from draft transactions
+  // // DISABLED EVM CRONJOB: @Cron('*/5 * * * *', { utcOffset: 0 })
+  async migrateMetadataFromDraftTransactions() {
+    // this.logger.info('Initiate job for migration draft transaction', dateHelper.getUTCTimestamp())
+    this.eventEmitter.emit(FinancialTransformationsEventType.DRAFT_TRANSACTION_MIGRATION)
+  }
+
+  // DISABLED: EVM Cronjob - Retry financial transformation failed tasks  
+  // // DISABLED EVM CRONJOB: @Cron('*/2 * * * *', { utcOffset: 0 })
+  async retryFinancialTransformationFailedTasks() {
+    /*
+    this.logger.info(
+      'Initiate job to retry failed financial transformation tasks...',
+      dateHelper.getUTCTimestamp().toString()
+    )
+
+    const retryablePreprocessTasks = await this.preprocessRawTasksService.getRetryableTasks()
+
+    for (const retryablePreprocessTask of retryablePreprocessTasks) {
+      this.eventEmitter.emit(FinancialTransformationsEventType.PREPROCESS_RAW_SYNC_ADDRESS, retryablePreprocessTask.id)
+      await setTimeout(5000)
+    }
+
+    const retryableCoreTasks = await this.coreTransformationTasksService.getRetryableTasks()
+
+    for (const retryableCoreTask of retryableCoreTasks) {
+      this.eventEmitter.emit(FinancialTransformationsEventType.CORE_TRANSFORMATION_SYNC_ADDRESS, retryableCoreTask.id)
+      await setTimeout(6000)
+    }
+
+    const retryablePerWalletTasks = await this.additionalTransformationPerWalletTasksService.getRetryableTasks()
+
+    for (const retryablePerWalletTask of retryablePerWalletTasks) {
+      this.eventEmitter.emit(
+        FinancialTransformationsEventType.ADDITIONAL_TRANSFORMATION_SYNC_PER_WALLET,
+        retryablePerWalletTask.id
+      )
+      await setTimeout(7000)
+    }
+
+    const retryablePerWalletGroupTasks =
+      await this.additionalTransformationPerWalletGroupTasksService.getRetryableTasks()
+
+    for (const retryablePerWalletGroupTask of retryablePerWalletGroupTasks) {
+      this.eventEmitter.emit(
+        FinancialTransformationsEventType.ADDITIONAL_TRANSFORMATION_SYNC_PER_WALLET_GROUP,
+        retryablePerWalletGroupTask.id
+      )
+      await setTimeout(8000)
+    }
+    */
+  }
+
+  // DISABLED EVM CRONJOB: // DISABLED EVM CRONJOB: @Cron('*/3 * * * *', { utcOffset: 0 })
+  async kickstartFullSync() {
+    this.logger.info('Initiate job to kickstartFullSync...', dateHelper.getUTCTimestamp().toString())
+
+    const isAnyRunningSyncTasks = await this.isAnyRunningSyncTasks()
+    const organizationFullSyncRequests = await this.organizationFullSyncRequestsEntityService.getNonExecuted()
+
+    for (const organizationFullSyncRequest of organizationFullSyncRequests) {
+      const organization = await this.organizationsEntityService.get(organizationFullSyncRequest.organizationId)
+
+      if (organization) {
+        if (organizationFullSyncRequest.forceRun) {
+          const anyRunningSyncTasksForThisOrganization = await this.isAnyRunningSyncTasksForThisOrganization(
+            organizationFullSyncRequest.organizationId
+          )
+          if (anyRunningSyncTasksForThisOrganization) {
+            continue
+          }
+        } else if (isAnyRunningSyncTasks) {
+          continue
+        }
+        this.logger.info(`kickstartFullSync for organizationId ${organization.id}`)
+        await this.walletsDomainService.syncAll(organization.id, TaskSyncType.FULL)
+        await this.organizationFullSyncRequestsEntityService.markAsExecuted(organizationFullSyncRequest.id)
+        break
+      } else {
+        this.logger.info(
+          `kickstartFullSync: organization id ${organizationFullSyncRequest.organizationId} not found: `,
+          { organizationFullSyncRequest }
+        )
+      }
+    }
+  }
+
+  async isAnyRunningSyncTasks(): Promise<boolean> {
+    const runningIngestionTasks = await this.ingestionsService.getAllRunningTasks()
+
+    if (runningIngestionTasks.length) {
+      return true
+    }
+
+    const runningPreprocessTasks = await this.preprocessRawTasksService.find({
+      where: { status: TaskStatusEnum.RUNNING }
+    })
+
+    if (runningPreprocessTasks.length) {
+      return true
+    }
+
+    const runningCoreTasks = await this.coreTransformationTasksService.find({
+      where: { status: TaskStatusEnum.RUNNING }
+    })
+
+    if (runningCoreTasks.length) {
+      return true
+    }
+
+    const runningPerWalletTasks = await this.additionalTransformationPerWalletTasksService.find({
+      where: { status: TaskStatusEnum.RUNNING }
+    })
+
+    if (runningPerWalletTasks.length) {
+      return true
+    }
+
+    const runningPerWalletGroupTasks = await this.additionalTransformationPerWalletGroupTasksService.find({
+      where: { status: TaskStatusEnum.RUNNING }
+    })
+
+    if (runningPerWalletGroupTasks.length) {
+      return true
+    }
+
+    return false
+  }
+
+  private async isAnyRunningSyncTasksForThisOrganization(organizationId: string) {
+    const wallets = await this.walletsService.getAllByOrganizationId(organizationId)
+    const addresses = wallets.map((wallet) => wallet.address)
+
+    const runningIngestionTasks = await this.ingestionsService.getAllRunningTasksForAddresses(addresses)
+    if (runningIngestionTasks.length) {
+      return true
+    }
+
+    const runningPreprocessTasks = await this.preprocessRawTasksService.getAllRunningTasksForAddresses(addresses)
+    if (runningPreprocessTasks.length) {
+      return true
+    }
+
+    const runningCoreTasks = await this.coreTransformationTasksService.getAllRunningTasksForOrganization(organizationId)
+    if (runningCoreTasks.length) {
+      return true
+    }
+
+    const runningPerWalletTasks =
+      await this.additionalTransformationPerWalletTasksService.getAllRunningTasksForOrganization(organizationId)
+    if (runningPerWalletTasks.length) {
+      return true
+    }
+
+    const runningPerWalletGroupTasks =
+      await this.additionalTransformationPerWalletGroupTasksService.getAllRunningTasksForOrganization(organizationId)
+    if (runningPerWalletGroupTasks.length) {
+      return true
+    }
+
+    return false
+  }
+}

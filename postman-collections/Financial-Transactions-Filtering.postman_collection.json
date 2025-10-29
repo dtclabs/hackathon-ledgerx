@@ -1,0 +1,951 @@
+{
+	"info": {
+		"_postman_id": "ft-filtering-test-001",
+		"name": "Financial Transactions Filtering Tests",
+		"description": "Test collection for Financial Transactions API filtering features including date filtering and address filtering",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Date Filtering Tests",
+			"item": [
+				{
+					"name": "Filter by startDate and endDate",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/financial-transactions?limit=50&offset=0&startDate=2024-01-01T00:00:00.000Z&endDate=2024-12-31T23:59:59.999Z",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"financial-transactions"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								},
+								{
+									"key": "startDate",
+									"value": "2024-01-01T00:00:00.000Z"
+								},
+								{
+									"key": "endDate",
+									"value": "2024-12-31T23:59:59.999Z"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by fromDate and toDate (aliases)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/financial-transactions?limit=50&offset=0&fromDate=2024-06-01T00:00:00.000Z&toDate=2024-06-30T23:59:59.999Z",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"financial-transactions"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								},
+								{
+									"key": "fromDate",
+									"value": "2024-06-01T00:00:00.000Z"
+								},
+								{
+									"key": "toDate",
+									"value": "2024-06-30T23:59:59.999Z"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by startDate only (last 30 days)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/financial-transactions?limit=100&offset=0&startDate={{$timestamp - 30*24*60*60*1000}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"financial-transactions"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								},
+								{
+									"key": "startDate",
+									"value": "{{$timestamp - 30*24*60*60*1000}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Address Filtering Tests",
+			"item": [
+				{
+					"name": "Filter by specific fromAddress",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+							"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/financial-transactions?limit=100&offset=0&fromAddress=DemoSolAddress1111111111111111111111111",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"financial-transactions"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								},
+								{
+									"key": "fromAddress",
+									"value": "DemoSolAddress1111111111111111111111111"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by specific toAddress",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/financial-transactions?limit=100&offset=0&toAddress=DemoSolAddress2222222222222222222222222",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"financial-transactions"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								},
+								{
+									"key": "toAddress",
+									"value": "DemoSolAddress2222222222222222222222222"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by address (either from or to)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/financial-transactions?limit=100&offset=0&address=DemoSolAddress1111111111111111111111111",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"financial-transactions"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								},
+								{
+									"key": "address",
+									"value": "DemoSolAddress1111111111111111111111111"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Combined Filtering Tests",
+			"item": [
+				{
+					"name": "Filter by date range AND specific address",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/financial-transactions?limit=100&offset=0&startDate=2024-01-01T00:00:00.000Z&endDate=2024-12-31T23:59:59.999Z&address=DemoSolAddress1111111111111111111111111",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"financial-transactions"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								},
+								{
+									"key": "startDate",
+									"value": "2024-01-01T00:00:00.000Z"
+								},
+								{
+									"key": "endDate",
+									"value": "2024-12-31T23:59:59.999Z"
+								},
+								{
+									"key": "address",
+									"value": "DemoSolAddress1111111111111111111111111"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by date, address AND symbol",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/financial-transactions?limit=50&offset=0&startDate=2024-01-01T00:00:00.000Z&address=DemoSolAddress1111111111111111111111111&symbol=SOL",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"financial-transactions"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								},
+								{
+									"key": "startDate",
+									"value": "2024-01-01T00:00:00.000Z"
+								},
+								{
+									"key": "address",
+									"value": "DemoSolAddress1111111111111111111111111"
+								},
+								{
+									"key": "symbol",
+									"value": "SOL"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by date, direction AND type",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/financial-transactions?limit=100&offset=0&startDate=2024-01-01T00:00:00.000Z&direction=incoming&type=deposit",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"financial-transactions"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								},
+								{
+									"key": "startDate",
+									"value": "2024-01-01T00:00:00.000Z"
+								},
+								{
+									"key": "direction",
+									"value": "incoming"
+								},
+								{
+									"key": "type",
+									"value": "deposit"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Pagination Style Tests",
+			"item": [
+				{
+					"name": "Standard limit/offset pagination",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/financial-transactions?limit=100&offset=0",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"financial-transactions"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Alternative page/size pagination",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/financial-transactions?page=0&size=100",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"financial-transactions"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "100"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Pagination with limit override",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/financial-transactions?page=1&size=10&limit=50&offset=25",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"financial-transactions"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								},
+								{
+									"key": "limit",
+									"value": "50"
+								},
+								{
+									"key": "offset",
+									"value": "25"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Set current timestamp for dynamic date filtering",
+					"pm.globals.set('current_timestamp', new Date().toISOString());",
+					"",
+					"// Set 30 days ago timestamp",
+					"const thirtyDaysAgo = new Date();",
+					"thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);",
+					"pm.globals.set('thirty_days_ago', thirtyDaysAgo.toISOString());"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Basic response validation",
+					"pm.test('Status code is 200', function () {",
+					"    pm.response.to.have.status(200);",
+					"});",
+					"",
+					"pm.test('Response has data structure', function () {",
+					"    const jsonData = pm.response.json();",
+					"    pm.expect(jsonData).to.have.property('data');",
+					"    pm.expect(jsonData.data).to.have.property('items');",
+					"    pm.expect(jsonData.data).to.have.property('totalItems');",
+					"    pm.expect(jsonData.data).to.have.property('totalPages');",
+					"    pm.expect(jsonData.data).to.have.property('currentPage');",
+					"    pm.expect(jsonData.data).to.have.property('limit');",
+					"});",
+					"",
+					"pm.test('Items array is valid', function () {",
+					"    const jsonData = pm.response.json();",
+					"    pm.expect(jsonData.data.items).to.be.an('array');",
+					"    ",
+					"    if (jsonData.data.items.length > 0) {",
+					"        const firstItem = jsonData.data.items[0];",
+					"        pm.expect(firstItem).to.have.property('id');",
+					"        pm.expect(firstItem).to.have.property('transactionHash');",
+					"        pm.expect(firstItem).to.have.property('fromAddress');",
+					"        pm.expect(firstItem).to.have.property('toAddress');",
+					"    }",
+					"});",
+					"",
+					"// Log key metrics",
+					"const jsonData = pm.response.json();",
+					"console.log(`Total items: ${jsonData.data.totalItems}`);",
+					"console.log(`Current page: ${jsonData.data.currentPage}`);",
+					"console.log(`Items on this page: ${jsonData.data.items.length}`);"
+				]
+			}
+		},
+		{
+			"name": "Get Transactions - HQ.xyz Compatible Format",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Test response structure and status",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has correct structure\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('data');",
+							"    pm.expect(jsonData.data).to.have.property('items');",
+							"    pm.expect(jsonData.data).to.have.property('totalItems');",
+							"    pm.expect(jsonData.data).to.have.property('currentPage');",
+							"    pm.expect(jsonData.data).to.have.property('totalPages');",
+							"});",
+							"",
+							"pm.test(\"Date filtering works (transactions within time range)\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    if (jsonData.data.items.length > 0) {",
+							"        const startTime = new Date('2025-10-08T17:00:00');",
+							"        const endTime = new Date('2025-11-06T16:59:59');",
+							"        ",
+							"        jsonData.data.items.forEach(function(transaction) {",
+							"            const txDate = new Date(transaction.transactionTime);",
+							"            pm.expect(txDate.getTime()).to.be.at.least(startTime.getTime());",
+							"            pm.expect(txDate.getTime()).to.be.at.most(endTime.getTime());",
+							"        });",
+							"    }",
+							"});",
+							"",
+							"pm.test(\"Transaction items have image data\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    if (jsonData.data.items.length > 0) {",
+							"        jsonData.data.items.forEach(function(transaction) {",
+							"            pm.expect(transaction).to.have.property('image');",
+							"            pm.expect(transaction.image).to.be.an('object');",
+							"            pm.expect(transaction.image).to.have.property('large');",
+							"            pm.expect(transaction.image).to.have.property('small');",
+							"            pm.expect(transaction.image).to.have.property('thumb');",
+							"            ",
+							"            // Validate image URLs format (should be strings)",
+							"            pm.expect(transaction.image.large).to.be.a('string');",
+							"            pm.expect(transaction.image.small).to.be.a('string');",
+							"            pm.expect(transaction.image.thumb).to.be.a('string');",
+							"        });",
+							"        ",
+							"        console.log(`Sample image data:`, jsonData.data.items[0].image);",
+							"    }",
+							"});",
+							"",
+							"pm.test(\"Image URLs use CoinGecko public endpoints\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    if (jsonData.data.items.length > 0) {",
+							"        const firstTransaction = jsonData.data.items[0];",
+							"        ",
+							"        // Check cryptocurrency.image URLs",
+							"        if (firstTransaction.cryptocurrency && firstTransaction.cryptocurrency.image) {",
+							"            const image = firstTransaction.cryptocurrency.image;",
+							"            pm.expect(image.large).to.include('assets.coingecko.com');",
+							"            pm.expect(image.small).to.include('assets.coingecko.com');",
+							"            pm.expect(image.thumb).to.include('assets.coingecko.com');",
+							"        }",
+							"        ",
+							"        // Check direct image field URLs",
+							"        if (firstTransaction.image) {",
+							"            pm.expect(firstTransaction.image.large).to.include('assets.coingecko.com');",
+							"            pm.expect(firstTransaction.image.small).to.include('assets.coingecko.com');",
+							"            pm.expect(firstTransaction.image.thumb).to.include('assets.coingecko.com');",
+							"        }",
+							"    }",
+							"});",
+							"",
+							"// Log HQ.xyz format compatibility",
+							"const jsonData = pm.response.json();",
+							"console.log(`HQ.xyz format test - Page: ${jsonData.data.currentPage}, Size: ${jsonData.data.items.length}`);",
+							"console.log(`Total items: ${jsonData.data.totalItems}`);"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/{{organization_id}}/financial-transactions?endTime=2025-11-06T16:59:59&page=0&size=25&startTime=2025-10-08T17:00:00",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"{{organization_id}}",
+						"financial-transactions"
+					],
+					"query": [
+						{
+							"key": "endTime",
+							"value": "2025-11-06T16:59:59",
+							"description": "End time filter (HQ.xyz format)"
+						},
+						{
+							"key": "page",
+							"value": "0",
+							"description": "Page number (0-based)"
+						},
+						{
+							"key": "size",
+							"value": "25",
+							"description": "Page size (default 25 like HQ.xyz)"
+						},
+						{
+							"key": "startTime",
+							"value": "2025-10-08T17:00:00",
+							"description": "Start time filter (HQ.xyz format)"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "New Filter Tests - Wallet Groups, TxHash, Activity",
+			"item": [
+				{
+					"name": "Filter by walletGroupIds",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/financial-transactions?limit=50&offset=0&walletGroupIds=group-1,group-2",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"financial-transactions"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50",
+									"description": "Number of transactions to retrieve"
+								},
+								{
+									"key": "offset",
+									"value": "0",
+									"description": "Number of transactions to skip"
+								},
+								{
+									"key": "walletGroupIds",
+									"value": "group-1,group-2",
+									"description": "Filter by wallet group IDs (comma-separated)"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by walletGroupIds + walletIds (intersection)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/financial-transactions?limit=50&offset=0&walletGroupIds=group-1&walletIds=wallet-1,wallet-2",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"financial-transactions"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50",
+									"description": "Number of transactions to retrieve"
+								},
+								{
+									"key": "offset",
+									"value": "0",
+									"description": "Number of transactions to skip"
+								},
+								{
+									"key": "walletGroupIds",
+									"value": "group-1",
+									"description": "Filter by wallet group ID"
+								},
+								{
+									"key": "walletIds",
+									"value": "wallet-1,wallet-2",
+									"description": "Filter by specific wallet IDs (intersection with group)"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by txHash (Transaction Hash)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/financial-transactions?limit=50&offset=0&txHash=5J7kM8jQvZ1Y2N3xH6aF4uL9pR8cT5bW7dE2qS1mA3nV",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"financial-transactions"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50",
+									"description": "Number of transactions to retrieve"
+								},
+								{
+									"key": "offset",
+									"value": "0",
+									"description": "Number of transactions to skip"
+								},
+								{
+									"key": "txHash",
+									"value": "5J7kM8jQvZ1Y2N3xH6aF4uL9pR8cT5bW7dE2qS1mA3nV",
+									"description": "Filter by Solana transaction signature/hash"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by activity (Transaction Type)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/financial-transactions?limit=50&offset=0&activity=swap",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"financial-transactions"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50",
+									"description": "Number of transactions to retrieve"
+								},
+								{
+									"key": "offset",
+									"value": "0",
+									"description": "Number of transactions to skip"
+								},
+								{
+									"key": "activity",
+									"value": "swap",
+									"description": "Filter by transaction activity (swap, transfer, etc.)"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Combined New Filters Test",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{organization_id}}/financial-transactions?limit=50&offset=0&walletGroupIds=group-1&activity=swap&startDate=2025-01-01T00:00:00.000Z&endDate=2025-12-31T23:59:59.999Z",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{organization_id}}",
+								"financial-transactions"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50",
+									"description": "Number of transactions to retrieve"
+								},
+								{
+									"key": "offset",
+									"value": "0",
+									"description": "Number of transactions to skip"
+								},
+								{
+									"key": "walletGroupIds",
+									"value": "group-1",
+									"description": "Filter by wallet group ID"
+								},
+								{
+									"key": "activity",
+									"value": "swap",
+									"description": "Filter by swap activity"
+								},
+								{
+									"key": "startDate",
+									"value": "2025-01-01T00:00:00.000Z",
+									"description": "Start date filter"
+								},
+								{
+									"key": "endDate",
+									"value": "2025-12-31T23:59:59.999Z",
+									"description": "End date filter"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "string",
+			"description": "Base URL for the API"
+		},
+		{
+			"key": "organization_id",
+			"value": "",
+			"type": "string",
+			"description": "Organization ID to use for testing"
+		},
+		{
+			"key": "jwt_token",
+			"value": "",
+			"type": "string",
+			"description": "JWT token for authentication"
+		}
+	]
+}

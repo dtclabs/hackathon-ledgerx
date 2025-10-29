@@ -1,0 +1,921 @@
+{
+  "info": {
+    "name": "Portfolio Balance Overview API",
+    "description": "Comprehensive portfolio balance endpoints supporting Solana with Helius integration. Provides balance overviews similar to the dashboard UI with token breakdowns, percentages, and filtering capabilities.",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "organization_id", 
+      "value": "18",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "{{JWT_TOKEN}}",
+      "type": "string"
+    },
+    {
+      "key": "wallet_public_id",
+      "value": "f92dd24e-88ec-4ecd-a092-fe7cc30f19be",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Portfolio Balance Overview",
+      "item": [
+        {
+          "name": "Get Portfolio Overview - All Wallets",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/{{organization_id}}/balances/overview",
+              "host": ["{{base_url}}"],
+              "path": ["{{organization_id}}", "balances", "overview"]
+            },
+            "description": "Get comprehensive portfolio overview with total balance, token holdings, and breakdown chart data. Returns data similar to the dashboard UI image."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Portfolio Overview - Solana Only",
+          "request": {
+            "method": "GET", 
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/{{organization_id}}/balances/overview?blockchainIds=solana-mainnet",
+              "host": ["{{base_url}}"],
+              "path": ["{{organization_id}}", "balances", "overview"],
+              "query": [
+                {
+                  "key": "blockchainIds",
+                  "value": "solana-mainnet",
+                  "description": "Filter to show only Solana blockchain balances"
+                }
+              ]
+            },
+            "description": "Get portfolio overview filtered for Solana blockchain only"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Portfolio Overview - Specific Wallet",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization", 
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/{{organization_id}}/balances/overview?walletIds={{wallet_public_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["{{organization_id}}", "balances", "overview"],
+              "query": [
+                {
+                  "key": "walletIds",
+                  "value": "{{wallet_public_id}}",
+                  "description": "Filter to specific wallet public ID"
+                }
+              ]
+            },
+            "description": "Get portfolio overview for a specific wallet"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Portfolio Overview - USD Currency",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/{{organization_id}}/balances/overview?fiatCurrency=USD&blockchainIds=solana-mainnet",
+              "host": ["{{base_url}}"],
+              "path": ["{{organization_id}}", "balances", "overview"],
+              "query": [
+                {
+                  "key": "fiatCurrency", 
+                  "value": "USD",
+                  "description": "Specify fiat currency for balance calculation"
+                },
+                {
+                  "key": "blockchainIds",
+                  "value": "solana-mainnet",
+                  "description": "Solana blockchain filter"
+                }
+              ]
+            },
+            "description": "Get portfolio overview with USD currency specification"
+          },
+          "response": []
+        }
+      ],
+      "description": "Portfolio overview endpoints providing comprehensive balance data with token breakdowns"
+    },
+    {
+      "name": "EVM Compatible Balance Endpoints",
+      "item": [
+        {
+          "name": "Get Balance - Default (EVM Compatible)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/{{organization_id}}/balances",
+              "host": ["{{base_url}}"],
+              "path": ["{{organization_id}}", "balances"]
+            },
+            "description": "Standard balance endpoint that automatically uses Helius for Solana wallets and maintains EVM compatibility"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Balance - Group by Blockchain",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/{{organization_id}}/balances?groupBy=blockchainId",
+              "host": ["{{base_url}}"],
+              "path": ["{{organization_id}}", "balances"],
+              "query": [
+                {
+                  "key": "groupBy",
+                  "value": "blockchainId",
+                  "description": "Group balance results by blockchain"
+                }
+              ]
+            },
+            "description": "Get balance grouped by blockchain ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Balance - Solana Filtered (Helius Integration)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/{{organization_id}}/balances?blockchainIds=solana-mainnet&groupBy=blockchainId",
+              "host": ["{{base_url}}"],
+              "path": ["{{organization_id}}", "balances"],
+              "query": [
+                {
+                  "key": "blockchainIds",
+                  "value": "solana-mainnet",
+                  "description": "Filter for Solana mainnet only"
+                },
+                {
+                  "key": "groupBy",
+                  "value": "blockchainId",
+                  "description": "Group by blockchain - returns same format as EVM"
+                }
+              ]
+            },
+            "description": "Get Solana balance using Helius integration in the same grouped format as EVM blockchains"
+          },
+          "response": [
+            {
+              "name": "Solana Balance Response (EVM Format)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/{{organization_id}}/balances?blockchainIds=solana-mainnet&groupBy=blockchainId",
+                  "host": ["{{base_url}}"],
+                  "path": ["{{organization_id}}", "balances"],
+                  "query": [
+                    {
+                      "key": "blockchainIds",
+                      "value": "solana-mainnet"
+                    },
+                    {
+                      "key": "groupBy",
+                      "value": "blockchainId"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"value\": \"2456789.5\",\n    \"fiatCurrency\": \"USD\",\n    \"groups\": {\n      \"solana-mainnet\": {\n        \"value\": \"2456789.5\",\n        \"fiatCurrency\": \"USD\"\n      }\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Balance - All Blockchains (EVM + Solana)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/{{organization_id}}/balances?groupBy=blockchainId",
+              "host": ["{{base_url}}"],
+              "path": ["{{organization_id}}", "balances"],
+              "query": [
+                {
+                  "key": "groupBy",
+                  "value": "blockchainId",
+                  "description": "Group by blockchain - includes both EVM and Solana"
+                }
+              ]
+            },
+            "description": "Get balance for all blockchains (EVM + Solana) in unified format"
+          },
+          "response": [
+            {
+              "name": "All Blockchains Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/{{organization_id}}/balances?groupBy=blockchainId",
+                  "host": ["{{base_url}}"],
+                  "path": ["{{organization_id}}", "balances"],
+                  "query": [
+                    {
+                      "key": "groupBy",
+                      "value": "blockchainId"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"value\": \"2461234.8936706711704289184929866076687855554\",\n    \"fiatCurrency\": \"USD\",\n    \"groups\": {\n      \"arbitrum_one\": {\n        \"value\": \"2.484045832461599817641626666\",\n        \"fiatCurrency\": \"USD\"\n      },\n      \"ethereum\": {\n        \"value\": \"0.0848121023953392333841161675\",\n        \"fiatCurrency\": \"USD\"\n      },\n      \"polygon\": {\n        \"value\": \"1.096085154618413260230116505482786\",\n        \"fiatCurrency\": \"USD\"\n      },\n      \"bsc\": {\n        \"value\": \"0.7887275816950766072371272686859995554\",\n        \"fiatCurrency\": \"USD\"\n      },\n      \"solana-mainnet\": {\n        \"value\": \"2456789.5\",\n        \"fiatCurrency\": \"USD\"\n      }\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Token-Level Balance (Individual Tokens)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/{{organization_id}}/balances/tokens",
+              "host": ["{{base_url}}"],
+              "path": ["{{organization_id}}", "balances", "tokens"]
+            },
+            "description": "Get token-level balance breakdown showing individual Solana token holdings (SOL, BONK, USDC, etc.) instead of blockchain groups. Similar to the Go solanaTokenBalances() function."
+          },
+          "response": [
+            {
+              "name": "Token-Level Balance Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/{{organization_id}}/balances/tokens",
+                  "host": ["{{base_url}}"],
+                  "path": ["{{organization_id}}", "balances", "tokens"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"value\": \"2456789.50\",\n    \"fiatCurrency\": \"USD\",\n    \"groups\": {\n      \"sol\": {\n        \"value\": \"1000000.00\",\n        \"fiatCurrency\": \"USD\"\n      },\n      \"bonk\": {\n        \"value\": \"750000.00\",\n        \"fiatCurrency\": \"USD\"\n      },\n      \"wif\": {\n        \"value\": \"400000.00\",\n        \"fiatCurrency\": \"USD\"\n      },\n      \"trump\": {\n        \"value\": \"200000.00\",\n        \"fiatCurrency\": \"USD\"\n      },\n      \"usdc\": {\n        \"value\": \"106789.50\",\n        \"fiatCurrency\": \"USD\"\n      }\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Balance - Specific Wallet",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/{{organization_id}}/balances?walletIds={{wallet_public_id}}&groupBy=walletId",
+              "host": ["{{base_url}}"],
+              "path": ["{{organization_id}}", "balances"],
+              "query": [
+                {
+                  "key": "walletIds",
+                  "value": "{{wallet_public_id}}",
+                  "description": "Filter to specific wallet"
+                },
+                {
+                  "key": "groupBy",
+                  "value": "walletId",
+                  "description": "Group by wallet ID"
+                }
+              ]
+            },
+            "description": "Get balance for specific wallet with grouping"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Balance - Nested Grouping (Wallet > Blockchain)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/{{organization_id}}/balances?groupBy=walletId&secondGroupBy=blockchainId",
+              "host": ["{{base_url}}"],
+              "path": ["{{organization_id}}", "balances"],
+              "query": [
+                {
+                  "key": "groupBy",
+                  "value": "walletId",
+                  "description": "Primary grouping by wallet ID"
+                },
+                {
+                  "key": "secondGroupBy",
+                  "value": "blockchainId",
+                  "description": "Secondary grouping by blockchain ID within each wallet"
+                }
+              ]
+            },
+            "description": "Get balance with nested grouping structure: first by wallet, then by blockchain within each wallet. Similar to EVM API format."
+          },
+          "response": [
+            {
+              "name": "Nested Grouping Response Example",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/{{organization_id}}/balances?groupBy=walletId&secondGroupBy=blockchainId",
+                  "host": ["{{base_url}}"],
+                  "path": ["{{organization_id}}", "balances"],
+                  "query": [
+                    {
+                      "key": "groupBy",
+                      "value": "walletId"
+                    },
+                    {
+                      "key": "secondGroupBy",
+                      "value": "blockchainId"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"value\": \"2456789.500000000000000000\",\n  \"fiatCurrency\": \"USD\",\n  \"groups\": {\n    \"f92dd24e-88ec-4ecd-a092-fe7cc30f19be\": {\n      \"value\": \"1500000.000000000000000000\",\n      \"fiatCurrency\": \"USD\",\n      \"groups\": {\n        \"solana\": {\n          \"value\": \"1500000.000000000000000000\",\n          \"fiatCurrency\": \"USD\"\n        }\n      }\n    },\n    \"g93ee25f-99fd-5fde-b193-gf8dd41g20cf\": {\n      \"value\": \"956789.500000000000000000\",\n      \"fiatCurrency\": \"USD\",\n      \"groups\": {\n        \"solana\": {\n          \"value\": \"956789.500000000000000000\",\n          \"fiatCurrency\": \"USD\"\n        }\n      }\n    },\n    \"h84ff36g-00ge-6gef-c284-hg9ee52h31dg\": {\n      \"value\": \"0.000000000000000000\",\n      \"fiatCurrency\": \"USD\",\n      \"groups\": {\n        \"solana\": {\n          \"value\": \"0.000000000000000000\",\n          \"fiatCurrency\": \"USD\"\n        }\n      }\n    }\n  }\n}"
+            }
+          ]
+        }
+      ],
+      "description": "Traditional balance endpoints that maintain EVM compatibility while supporting Solana via Helius"
+    },
+    {
+      "name": "Individual Wallet Endpoints",
+      "item": [
+        {
+          "name": "Get Wallet Balance (Helius Direct)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/{{organization_id}}/portfolio/wallet/{{wallet_public_id}}/balance",
+              "host": ["{{base_url}}"],
+              "path": ["{{organization_id}}", "portfolio", "wallet", "{{wallet_public_id}}", "balance"]
+            },
+            "description": "Get direct wallet balance from Helius for a specific Solana wallet"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Wallet Dashboard Overview",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/{{organization_id}}/portfolio/wallet/{{wallet_public_id}}/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["{{organization_id}}", "portfolio", "wallet", "{{wallet_public_id}}", "dashboard"]
+            },
+            "description": "Get dashboard-style portfolio overview matching the UI image format with total balance, token breakdown, and percentages. Perfect for frontend dashboard integration."
+          },
+          "response": [
+            {
+              "name": "Success Response Example",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/{{organization_id}}/portfolio/wallet/{{wallet_public_id}}/dashboard",
+                  "host": ["{{base_url}}"],
+                  "path": ["{{organization_id}}", "portfolio", "wallet", "{{wallet_public_id}}", "dashboard"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"totalBalance\": \"$2,456,789.5 USD\",\n  \"totalBalanceRaw\": 2456789.5,\n  \"walletAddress\": \"9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM\",\n  \"tokens\": [\n    {\n      \"symbol\": \"SOLANA\",\n      \"value\": \"$1,000,000 USD\",\n      \"valueRaw\": 1000000,\n      \"percentage\": 40.70,\n      \"formattedPercentage\": \"40.70%\",\n      \"color\": \"#9945FF\",\n      \"amount\": 5076.14,\n      \"priceUsd\": 197.2\n    },\n    {\n      \"symbol\": \"BONK\",\n      \"value\": \"$750,000 USD\",\n      \"valueRaw\": 750000,\n      \"percentage\": 30.53,\n      \"formattedPercentage\": \"30.53%\",\n      \"color\": \"#F5A623\",\n      \"amount\": 45000000000,\n      \"priceUsd\": 0.0000167,\n      \"address\": \"DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263\"\n    },\n    {\n      \"symbol\": \"WIF\",\n      \"value\": \"$400,000 USD\",\n      \"valueRaw\": 400000,\n      \"percentage\": 16.28,\n      \"formattedPercentage\": \"16.28%\",\n      \"color\": \"#8B4513\",\n      \"amount\": 142857.14,\n      \"priceUsd\": 2.8,\n      \"address\": \"EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm\"\n    },\n    {\n      \"symbol\": \"TRUMP\",\n      \"value\": \"$200,000 USD\",\n      \"valueRaw\": 200000,\n      \"percentage\": 8.14,\n      \"formattedPercentage\": \"8.14%\",\n      \"color\": \"#FF6B6B\",\n      \"amount\": 44444444.44,\n      \"priceUsd\": 0.0045\n    },\n    {\n      \"symbol\": \"USDC\",\n      \"value\": \"$106,790 USD\",\n      \"valueRaw\": 106789.5,\n      \"percentage\": 4.35,\n      \"formattedPercentage\": \"4.35%\",\n      \"color\": \"#2775CA\",\n      \"amount\": 106789.5,\n      \"priceUsd\": 1.0,\n      \"address\": \"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v\"\n    }\n  ],\n  \"lastUpdated\": \"2025-10-16T10:30:45.123Z\",\n  \"summary\": {\n    \"tokenCount\": 5,\n    \"largestHolding\": {\n      \"symbol\": \"SOLANA\",\n      \"percentage\": 40.70\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Wallet Transactions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/{{organization_id}}/financial-transactions/wallet/{{wallet_public_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["{{organization_id}}", "financial-transactions", "wallet", "{{wallet_public_id}}"]
+            },
+            "description": "Get transactions for specific wallet (for context)"
+          },
+          "response": []
+        }
+      ],
+      "description": "Individual wallet-specific endpoints"
+    },
+    {
+      "name": "Test & Debug Endpoints",
+      "item": [
+        {
+          "name": "Debug - Organization Wallets",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/{{organization_id}}/wallets",
+              "host": ["{{base_url}}"],
+              "path": ["{{organization_id}}", "wallets"]
+            },
+            "description": "List all wallets in the organization to verify wallet IDs"
+          },
+          "response": []
+        },
+        {
+          "name": "Debug - Supported Blockchains",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/{{organization_id}}/blockchains",
+              "host": ["{{base_url}}"],
+              "path": ["{{organization_id}}", "blockchains"]
+            },
+            "description": "List supported blockchains to verify blockchain IDs"
+          },
+          "response": []
+        }
+      ],
+      "description": "Debugging and verification endpoints"
+    },
+    {
+      "name": "Token Analysis Endpoints",
+      "item": [
+        {
+          "name": "Get Token Holders - SOL",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/portfolio/{{organization_id}}/token-holders/SOL",
+              "host": ["{{base_url}}"],
+              "path": ["portfolio", "{{organization_id}}", "token-holders", "SOL"]
+            },
+            "description": "Get all wallets in the organization that hold SOL tokens with their balances and distribution percentages"
+          },
+          "response": [
+            {
+              "name": "SOL Holders Success Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/portfolio/{{organization_id}}/token-holders/SOL",
+                  "host": ["{{base_url}}"],
+                  "path": ["portfolio", "{{organization_id}}", "token-holders", "SOL"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"tokenSymbol\": \"SOL\",\n  \"tokenName\": \"Solana\",\n  \"tokenPrice\": 197.2,\n  \"formattedTokenPrice\": \"$197.20\",\n  \"totalHolders\": 3,\n  \"totalTokens\": 15230.45,\n  \"formattedTotalTokens\": \"15,230.45\",\n  \"totalValueUsd\": 3003445.364,\n  \"formattedTotalValue\": \"$3,003,445\",\n  \"averageBalance\": 5076.82,\n  \"holders\": [\n    {\n      \"walletAddress\": \"9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM\",\n      \"walletPublicId\": \"f92dd24e-88ec-4ecd-a092-fe7cc30f19be\",\n      \"walletName\": \"Main Wallet\",\n      \"balance\": 5076.14,\n      \"valueUsd\": 1001011.448,\n      \"priceUsd\": 197.2,\n      \"percentage\": 33.33,\n      \"formattedPercentage\": \"33.33%\",\n      \"formattedBalance\": \"5,076.14\",\n      \"formattedValue\": \"$1,001,011\"\n    },\n    {\n      \"walletAddress\": \"8WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtBWWN\",\n      \"walletPublicId\": \"g93ee25f-99fd-5fde-b193-gf8dd41g20cf\",\n      \"walletName\": \"Secondary Wallet\",\n      \"balance\": 4150.21,\n      \"valueUsd\": 818421.412,\n      \"priceUsd\": 197.2,\n      \"percentage\": 27.24,\n      \"formattedPercentage\": \"27.24%\",\n      \"formattedBalance\": \"4,150.21\",\n      \"formattedValue\": \"$818,421\"\n    }\n  ],\n  \"lastUpdated\": \"2025-10-16T10:45:30.123Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Token Holders - BONK",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/portfolio/{{organization_id}}/token-holders/BONK",
+              "host": ["{{base_url}}"],
+              "path": ["portfolio", "{{organization_id}}", "token-holders", "BONK"]
+            },
+            "description": "Get all wallets holding BONK tokens"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Token Holders - USDC",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/portfolio/{{organization_id}}/token-holders/USDC",
+              "host": ["{{base_url}}"],
+              "path": ["portfolio", "{{organization_id}}", "token-holders", "USDC"]
+            },
+            "description": "Get all wallets holding USDC tokens"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Token Holders - With Filters",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/portfolio/{{organization_id}}/token-holders/SOL?minBalance=100&sortBy=balance",
+              "host": ["{{base_url}}"],
+              "path": ["portfolio", "{{organization_id}}", "token-holders", "SOL"],
+              "query": [
+                {
+                  "key": "minBalance",
+                  "value": "100",
+                  "description": "Only include wallets with at least 100 SOL"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "balance",
+                  "description": "Sort by balance (options: balance, percentage, walletAddress)"
+                }
+              ]
+            },
+            "description": "Get SOL token holders with minimum balance filter and custom sorting"
+          },
+          "response": []
+        }
+      ],
+      "description": "Token analysis and holder distribution endpoints"
+    },
+    {
+      "name": "Jupiter Token Information",
+      "item": [
+        {
+          "name": "Get Jupiter Token Info - Purple Bitcoin (PBTC)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/portfolio/jupiter/tokens/HfMbPyDdZH6QMaDDUokjYCkHxzjoGBMpgaUvpLWGbF5p/info",
+              "host": ["{{base_url}}"],
+              "path": ["portfolio", "jupiter", "tokens", "HfMbPyDdZH6QMaDDUokjYCkHxzjoGBMpgaUvpLWGbF5p", "info"]
+            },
+            "description": "Get comprehensive token information from Jupiter v2 search API for Purple Bitcoin (PBTC) token"
+          },
+          "response": [
+            {
+              "name": "PBTC Token Info Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/portfolio/jupiter/tokens/HfMbPyDdZH6QMaDDUokjYCkHxzjoGBMpgaUvpLWGbF5p/info",
+                  "host": ["{{base_url}}"],
+                  "path": ["portfolio", "jupiter", "tokens", "HfMbPyDdZH6QMaDDUokjYCkHxzjoGBMpgaUvpLWGbF5p", "info"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": \"HfMbPyDdZH6QMaDDUokjYCkHxzjoGBMpgaUvpLWGbF5p\",\n  \"name\": \"Purple Bitcoin\",\n  \"symbol\": \"PBTC\",\n  \"icon\": \"https://gateway.irys.xyz/sSkCiLfqIwenQhAwaM-Yjfct9U1AkQpzALh4zk4oaZ8\",\n  \"decimals\": 9,\n  \"twitter\": \"https://x.com/purple_bitcoin_\",\n  \"telegram\": \"https://t.me/purplebitcoin_verifiy\",\n  \"website\": \"https://www.purplebitcoin.com/\",\n  \"dev\": \"AX6c3wzFAUijUafvqErHuZ3fNbmVh5qgsPMDXSGfHGYN\",\n  \"circSupply\": 19310391.7508437,\n  \"totalSupply\": 19310391.7508437,\n  \"tokenProgram\": \"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA\",\n  \"firstPool\": {\n    \"id\": \"ATH32pbLRupjq8YNUHQWaJbgBbGPRbrw2GZw5jdZXiRr\",\n    \"createdAt\": \"2024-12-04T19:10:21Z\"\n  },\n  \"holderCount\": 11908,\n  \"audit\": {\n    \"mintAuthorityDisabled\": true,\n    \"freezeAuthorityDisabled\": true,\n    \"topHoldersPercentage\": 13.8516567666731\n  },\n  \"organicScore\": 44.9249210332451,\n  \"organicScoreLabel\": \"medium\",\n  \"tags\": [\n    \"unknown\"\n  ],\n  \"fdv\": 6629794.2959217,\n  \"mcap\": 6629794.2959217,\n  \"usdPrice\": 0.343327798910762,\n  \"priceBlockId\": 373756011,\n  \"liquidity\": 250961.93056533,\n  \"stats1h\": {\n    \"priceChange\": -0.352439997562537,\n    \"holderChange\": 0.168236877523553,\n    \"liquidityChange\": -0.110146831519903,\n    \"volumeChange\": 1297.14117817807,\n    \"buyVolume\": 13.8849343525095,\n    \"sellVolume\": 502.999234657294,\n    \"buyOrganicVolume\": 13.8849343525095,\n    \"sellOrganicVolume\": 68.3614737765523,\n    \"numBuys\": 2,\n    \"numSells\": 5,\n    \"numTraders\": 7,\n    \"numOrganicBuyers\": 1,\n    \"numNetBuyers\": 2\n  },\n  \"stats6h\": {\n    \"priceChange\": 1.89715016106233,\n    \"holderChange\": 0.193521245267143,\n    \"liquidityChange\": 1.62196961410411,\n    \"volumeChange\": -51.3419328843724,\n    \"buyVolume\": 181.369225806569,\n    \"sellVolume\": 974.785601899557,\n    \"buyOrganicVolume\": 34.6557956605372,\n    \"sellOrganicVolume\": 78.3387514481315,\n    \"numBuys\": 20,\n    \"numSells\": 18,\n    \"numTraders\": 25,\n    \"numOrganicBuyers\": 2,\n    \"numNetBuyers\": 10\n  },\n  \"stats24h\": {\n    \"priceChange\": -1.49134193998679,\n    \"holderChange\": 0.0504116955133591,\n    \"liquidityChange\": -1.92089165266941,\n    \"volumeChange\": -49.7199350811488,\n    \"buyVolume\": 4546.13301165638,\n    \"sellVolume\": 3164.86110646735,\n    \"buyOrganicVolume\": 238.796970681649,\n    \"sellOrganicVolume\": 372.775905959,\n    \"numBuys\": 69,\n    \"numSells\": 66,\n    \"numTraders\": 75,\n    \"numOrganicBuyers\": 5,\n    \"numNetBuyers\": 30\n  },\n  \"ctLikes\": 53,\n  \"updatedAt\": \"2025-10-16T13:16:17.685465279Z\",\n  \"fetchedAt\": \"2025-10-16T13:20:00.000Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Jupiter Token Info - BONK",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/portfolio/jupiter/tokens/DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263/info",
+              "host": ["{{base_url}}"],
+              "path": ["portfolio", "jupiter", "tokens", "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263", "info"]
+            },
+            "description": "Get Jupiter token information for BONK token"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Jupiter Token Info - USDC",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/portfolio/jupiter/tokens/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/info",
+              "host": ["{{base_url}}"],
+              "path": ["portfolio", "jupiter", "tokens", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", "info"]
+            },
+            "description": "Get Jupiter token information for USDC token"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Jupiter Token Info - Token Not Found",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/portfolio/jupiter/tokens/InvalidTokenAddress123456789/info",
+              "host": ["{{base_url}}"],
+              "path": ["portfolio", "jupiter", "tokens", "InvalidTokenAddress123456789", "info"]
+            },
+            "description": "Test case for when token is not found in Jupiter database"
+          },
+          "response": [
+            {
+              "name": "Token Not Found Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/portfolio/jupiter/tokens/InvalidTokenAddress123456789/info",
+                  "host": ["{{base_url}}"],
+                  "path": ["portfolio", "jupiter", "tokens", "InvalidTokenAddress123456789", "info"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"Token not found\",\n  \"tokenAddress\": \"InvalidTokenAddress123456789\",\n  \"message\": \"No token information found in Jupiter database\"\n}"
+            }
+          ]
+        }
+      ],
+      "description": "Jupiter v2 search API integration endpoints for token metadata and information"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-set JWT token from environment if available",
+          "if (pm.environment.get('JWT_TOKEN')) {",
+          "    pm.collectionVariables.set('jwt_token', pm.environment.get('JWT_TOKEN'));",
+          "}"
+        ]
+      }
+    }
+  ]
+}

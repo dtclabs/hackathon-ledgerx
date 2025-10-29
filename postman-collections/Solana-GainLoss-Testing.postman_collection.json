@@ -1,0 +1,501 @@
+{
+	"info": {
+		"_postman_id": "gainloss-test-collection",
+		"name": "🧪 Solana Gain/Loss Testing",
+		"description": "Test collection for Solana gain/loss calculation with fake data generation",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Debug Wallet Data",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"if (pm.response.code === 200) {",
+							"    const response = pm.response.json();",
+							"    ",
+							"    pm.test('Response has required fields', function () {",
+							"        pm.expect(response).to.have.property('walletPublicId');",
+							"        pm.expect(response).to.have.property('walletAddress');",
+							"        pm.expect(response).to.have.property('debugTransactions');",
+							"        pm.expect(response).to.have.property('foundTransactions');",
+							"    });",
+							"    ",
+							"    console.log('🔍 Wallet Address:', response.walletAddress);",
+							"    console.log('📊 Found Transactions:', response.foundTransactions);",
+							"    if (response.debugTransactions && response.debugTransactions.length > 0) {",
+							"        console.log('💰 Sample Transaction:', response.debugTransactions[0]);",
+							"    }",
+							"}"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt_token}}"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/{{organization_id}}/financial-transactions/wallet/{{wallet_public_id}}/debug",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"{{organization_id}}",
+						"financial-transactions",
+						"wallet",
+						"{{wallet_public_id}}",
+						"debug"
+					]
+				},
+				"description": "Debug endpoint to see what transaction data exists for the wallet and check address matching"
+			}
+		},
+		{
+			"name": "2. Generate Simple Test Data",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"if (pm.response.code === 200) {",
+							"    const response = pm.response.json();",
+							"    ",
+							"    pm.test('Response has scenario info', function () {",
+							"        pm.expect(response).to.have.property('scenario', 'simple');",
+							"        pm.expect(response).to.have.property('transactions');",
+							"        pm.expect(response).to.have.property('expectedGainLoss');",
+							"        pm.expect(response).to.have.property('remainingPosition');",
+							"    });",
+							"    ",
+							"    console.log('🎯 Test Scenario:', response.scenario);",
+							"    console.log('📝 Transactions Created:', response.transactions);",
+							"    console.log('💰 Expected Gain/Loss:', response.expectedGainLoss);",
+							"    console.log('📊 Remaining Position:', response.remainingPosition);",
+							"    console.log('⚠️ IMPORTANT: Gain/loss is NOT calculated automatically!');",
+							"    console.log('🔄 Run request #7 (Recalculate Gains/Losses) to calculate gain/loss values.');",
+							"}"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt_token}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\\n  \\\"scenario\\\": \\\"simple\\\"\\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/{{organization_id}}/financial-transactions/wallet/{{wallet_public_id}}/generate-test-data",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"{{organization_id}}",
+						"financial-transactions",
+						"wallet",
+						"{{wallet_public_id}}",
+						"generate-test-data"
+					]
+				},
+				"description": "Generate simple buy/sell scenario: Buy 100k BONK for $50, then sell 60k BONK for $45. Expected gain: $15. NOTE: Gain/loss is NOT calculated automatically - use the recalculate endpoint (request #7)."
+			}
+		},
+		{
+			"name": "3. Generate FIFO Test Data",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"if (pm.response.code === 200) {",
+							"    const response = pm.response.json();",
+							"    ",
+							"    pm.test('Response has FIFO scenario info', function () {",
+							"        pm.expect(response).to.have.property('scenario', 'fifo-test');",
+							"        pm.expect(response).to.have.property('transactions');",
+							"        pm.expect(response).to.have.property('expectedFifoCalculation');",
+							"    });",
+							"    ",
+							"    console.log('🎯 Test Scenario:', response.scenario);",
+							"    console.log('📝 Transactions Created:', response.transactions);",
+							"    console.log('🔄 FIFO Calculation:', response.expectedFifoCalculation);",
+							"    ",
+							"    if (response.expectedFifoCalculation) {",
+							"        console.log('💰 Total Expected Gain:', response.expectedFifoCalculation.totalGain);",
+							"        console.log('📊 Remaining Position:', response.expectedFifoCalculation.remainingPosition);",
+							"    }",
+							"    console.log('⚠️ IMPORTANT: Gain/loss is NOT calculated automatically!');",
+							"    console.log('🔄 Run request #7 (Recalculate Gains/Losses) to calculate gain/loss values.');",
+							"}"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt_token}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\\n  \\\"scenario\\\": \\\"fifo-test\\\"\\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/{{organization_id}}/financial-transactions/wallet/{{wallet_public_id}}/generate-test-data",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"{{organization_id}}",
+						"financial-transactions",
+						"wallet",
+						"{{wallet_public_id}}",
+						"generate-test-data"
+					]
+				},
+				"description": "Generate complex FIFO test scenario: 3 buys at different prices, 2 sells to test First-In-First-Out accounting. Expected total gain: $116. NOTE: Gain/loss is NOT calculated automatically - use the recalculate endpoint (request #7)."
+			}
+		},
+		{
+			"name": "4. Check Wallet Balances",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"if (pm.response.code === 200) {",
+							"    const response = pm.response.json();",
+							"    ",
+							"    pm.test('Response has balance info', function () {",
+							"        pm.expect(response).to.have.property('walletPublicId');",
+							"        pm.expect(response).to.have.property('balances');",
+							"        pm.expect(response).to.have.property('totalTokens');",
+							"    });",
+							"    ",
+							"    console.log('👛 Wallet:', response.walletPublicId);",
+							"    console.log('🏦 Wallet Address:', response.walletAddress);",
+							"    console.log('📊 Total Token Types:', response.totalTokens);",
+							"    ",
+							"    if (response.balances && response.balances.length > 0) {",
+							"        console.log('💰 Token Balances:');",
+							"        response.balances.forEach(balance => {",
+							"            console.log(`  ${balance.symbol}: ${balance.balance} (${balance.tokenAddress})`);",
+							"        });",
+							"    } else {",
+							"        console.log('⚠️ No balances found - check address case sensitivity or generate test data first');",
+							"    }",
+							"}"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt_token}}"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/{{organization_id}}/financial-transactions/wallet/{{wallet_public_id}}/balances",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"{{organization_id}}",
+						"financial-transactions",
+						"wallet",
+						"{{wallet_public_id}}",
+						"balances"
+					]
+				},
+				"description": "Check calculated token balances from transactions. Should show remaining tokens after test data generation."
+			}
+		},
+		{
+			"name": "5. 🧹 Cleanup Test Data",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"if (pm.response.code === 200) {",
+							"    const response = pm.response.json();",
+							"    ",
+							"    pm.test('Cleanup response has required fields', function () {",
+							"        pm.expect(response).to.have.property('deleted');",
+							"        pm.expect(response).to.have.property('message');",
+							"    });",
+							"    ",
+							"    console.log('🧹 Cleanup Results:', response.message);",
+							"    console.log('📊 Records Deleted:', response.deleted);",
+							"}"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt_token}}"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/{{organization_id}}/financial-transactions/solana/test-data/cleanup",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"{{organization_id}}",
+						"financial-transactions",
+						"solana",
+						"test-data",
+						"cleanup"
+					]
+				},
+				"description": "Clean up fake test data only. This removes transactions created by the test data generation."
+			}
+		},
+		{
+			"name": "6. ⚠️ Truncate ALL Solana Data",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"if (pm.response.code === 200) {",
+							"    const response = pm.response.json();",
+							"    ",
+							"    pm.test('Truncate response has required fields', function () {",
+							"        pm.expect(response).to.have.property('deleted');",
+							"        pm.expect(response).to.have.property('message');",
+							"    });",
+							"    ",
+							"    console.log('⚠️ TRUNCATE Results:', response.message);",
+							"    console.log('📊 Total Records Deleted:', response.deleted);",
+							"}"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt_token}}"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/{{organization_id}}/financial-transactions/solana/truncate",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"{{organization_id}}",
+						"financial-transactions",
+						"solana", 
+						"truncate"
+					]
+				},
+				"description": "⚠️ WARNING: This deletes ALL Solana financial transaction data for the organization, not just test data!"
+			}
+		},
+		{
+			"name": "7. 🔄 Recalculate Gains/Losses",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"if (pm.response.code === 200) {",
+							"    const response = pm.response.json();",
+							"    ",
+							"    pm.test('Recalculation response has required fields', function () {",
+							"        pm.expect(response).to.have.property('processed');",
+							"    });",
+							"    ",
+							"    console.log('🔄 Gain/Loss Recalculation Complete');",
+							"    console.log('📊 Transactions Processed:', response.processed || 'N/A');",
+							"    if (response.message) {",
+							"        console.log('📝 Message:', response.message);",
+							"    }",
+							"}"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt_token}}"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/{{organization_id}}/financial-transactions/wallet/{{wallet_public_id}}/recalculate-test-gains-losses",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"{{organization_id}}",
+						"financial-transactions",
+						"wallet",
+						"{{wallet_public_id}}",
+						"recalculate-test-gains-losses"
+					]
+				},
+				"description": "Recalculate gain/loss values for all transactions in the test wallet. Run this after generating test data to ensure proper gain/loss calculations."
+			}
+		},
+		{
+			"name": "8. Get Solana Transactions",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"if (pm.response.code === 200) {",
+							"    const response = pm.response.json();",
+							"    ",
+							"    pm.test('Response has pagination info', function () {",
+							"        pm.expect(response).to.have.property('items');",
+							"        pm.expect(response).to.have.property('totalItems');",
+							"        pm.expect(response).to.have.property('currentPage');",
+							"        pm.expect(response).to.have.property('limit');",
+							"    });",
+							"    ",
+							"    console.log('📄 Page:', response.currentPage + 1);",
+							"    console.log('📊 Items on this page:', response.items.length);",
+							"    console.log('🔢 Total items:', response.totalItems);",
+							"    console.log('📏 Page size:', response.limit);",
+							"    ",
+							"    if (response.items && response.items.length > 0) {",
+							"        console.log('💰 Sample Transaction:');",
+							"        const sample = response.items[0];",
+							"        console.log(`  Hash: ${sample.hash}`);",
+							"        console.log(`  Type: ${sample.typeDetail?.label}`);",
+							"        console.log(`  Amount: ${sample.cryptocurrencyAmount} ${sample.cryptocurrency?.symbol}`);",
+							"        console.log(`  Direction: ${sample.direction}`);",
+							"    }",
+							"}"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt_token}}"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/{{organization_id}}/financial-transactions/solana?page=0&size=10",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"{{organization_id}}",
+						"financial-transactions",
+						"solana"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "0"
+						},
+						{
+							"key": "size",
+							"value": "10"
+						}
+					]
+				},
+				"description": "Get paginated list of Solana financial transactions. Shows the test data that was generated."
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "organization_id",
+			"value": "11",
+			"type": "string"
+		},
+		{
+			"key": "wallet_public_id",
+			"value": "your-wallet-public-id-here",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token",
+			"value": "your-jwt-token-here",
+			"type": "string"
+		}
+	]
+}

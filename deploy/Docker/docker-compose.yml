@@ -1,0 +1,83 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: example
+      POSTGRES_DB: hq_evm_backend
+    volumes:
+      - db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d hq_evm_backend || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  # One-shot job để chạy migrations ở môi trường DEV
+  migrate-dev:
+    image: node:20-bookworm-slim
+    working_dir: /home/app
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - ../../backend/.env.docker   # chứa biến DB, vv.
+    environment:
+      NODE_ENV: development
+      # Nếu migrations chạy bằng ts-node, đảm bảo scripts đã config
+    volumes:
+      - ../../backend:/home/app
+      - app-node-modules:/home/app/node_modules
+    command: >
+      bash -lc "
+        apt-get update &&
+        apt-get install -y --no-install-recommends python3 make g++ pkg-config &&
+        export PYTHON=/usr/bin/python3 &&
+        corepack enable &&
+        corepack prepare yarn@4.2.2 --activate &&
+        YARN_NODE_LINKER=node-modules yarn install &&
+        yarn migrate:up
+      "
+    restart: "no"
+
+  app:
+    image: node:20-bookworm-slim
+    working_dir: /home/app
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate-dev:
+        condition: service_completed_successfully
+    env_file:
+      - ../../backend/.env.docker
+    environment:
+      NODE_ENV: development
+      # Bật polling để watch file ổn định trên Docker Desktop/macOS/WSL
+      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: "true"
+    ports:
+      - "3001:3001"
+    volumes:
+      - ../../backend:/home/app
+      - app-node-modules:/home/app/node_modules
+    command: >
+      bash -lc "
+        apt-get update &&
+        apt-get install -y --no-install-recommends python3 make g++ pkg-config &&
+        export PYTHON=/usr/bin/python3 &&
+        corepack enable &&
+        corepack prepare yarn@4.2.2 --activate &&
+        YARN_NODE_LINKER=node-modules yarn install &&
+        yarn start:dev
+      "
+    restart: unless-stopped
+
+volumes:
+  db:
+  app-node-modules:
