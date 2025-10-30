@@ -1,0 +1,23 @@
+import { ContractNetworksConfig } from '@gnosis.pm/safe-core-sdk'
+
+export const DISPERSE_CONTRACT_MAP = {
+  ethereum: '0xD152f549545093347A162Dce210e7293f1452150',
+  goerli: '0xD152f549545093347A162Dce210e7293f1452150',
+  polygon: '0xD152f549545093347A162Dce210e7293f1452150',
+  bsc: '0xD152f549545093347A162Dce210e7293f1452150',
+  sepolia: '0xD152f549545093347A162Dce210e7293f1452150',
+  arbitrum_one: '0xD152f549545093347A162Dce210e7293f1452150',
+  optimism: '0xD152f549545093347A162Dce210e7293f1452150',
+  gnosis_chain: '0xD152f549545093347A162Dce210e7293f1452150'
+}
+
+export const GNOSIS_SAFE_CONTRACT_MAP: ContractNetworksConfig = {
+  // ethereum sepolia
+  '11155111': {
+    multiSendAddress: '0x38869bf66a61cF6bDB996A6aE40D5853Fd43B526',
+    multiSendCallOnlyAddress: '0x9641d764fc13c8B624c04430C7356C1C7C8102e2',
+    safeMasterCopyAddress: '0x41675C099F32341bf84BFc5382aF534df5C7461a',
+    safeProxyFactoryAddress: '0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67'
+  }
+}
+

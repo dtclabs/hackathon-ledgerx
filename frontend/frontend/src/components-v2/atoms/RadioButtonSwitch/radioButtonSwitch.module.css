@@ -1,0 +1,31 @@
+.radioButtonSwitch {
+  @apply appearance-none cursor-pointer;
+}
+
+.radioButtonSwitchLabel {
+  @apply flex flex-col items-center cursor-pointer px-4 justify-center;
+  height: 50px;
+}
+
+.radioButtonSwitchLabel > p {
+  font-weight: 500;
+  color: #777675;
+}
+
+.radioButtonSwitchLabel > span {
+  color: #777675;
+}
+
+.radioButtonSwitch:checked + .radioButtonSwitchLabel {
+  border-radius: 4px;
+  border: 1px solid #000019;
+  background: #fbfafa;
+}
+
+.radioButtonSwitch:checked + .radioButtonSwitchLabel > p {
+  color: #000019;
+}
+
+.radioButtonSwitch:checked + .radioButtonSwitchLabel > span {
+  color: #000019;
+}

@@ -1,0 +1,223 @@
+// Sample data for dashboard charts
+export const SAMPLE_WALLET_OVERVIEW_DATA = {
+  totalValue: 16234.23,
+  trend: 12,
+  tokens: [
+    {
+      id: '1',
+      name: 'Solana',
+      symbol: 'SOL',
+      amount: 0.25,
+      value: 290.01,
+      trend: 12,
+      color: '#F7931A',
+      icon: '/svg/sample-token/Solana.svg'
+    },
+    {
+      id: '2',
+      name: 'Bonk',
+      symbol: 'BONK',
+      amount: 124.02,
+      value: 124.02,
+      trend: 12,
+      color: '#627EEA',
+      icon: '/svg/sample-token/Bonk.svg'
+    },
+    {
+      id: '3',
+      name: 'USDC',
+      symbol: 'USDC',
+      amount: 5000.0,
+      value: 500.0,
+      trend: 0.5,
+      color: '#F5AC37',
+      icon: '/svg/sample-token/Usdc.svg'
+    }
+  ]
+}
+
+export const SAMPLE_PORTFOLIO_ANALYSIS_DATA = {
+  timeframes: ['1D', '1W', '1M', '3M', '1Y', 'ALL'],
+  selectedTimeframe: 'ALL',
+  chartData: [
+    { date: '2019-01', token1: 800, token2: 600, token3: 400 },
+    { date: '2019-02', token1: 750, token2: 650, token3: 450 },
+    { date: '2019-03', token1: 700, token2: 700, token3: 500 },
+    { date: '2019-04', token1: 650, token2: 750, token3: 550 },
+    { date: '2019-05', token1: 600, token2: 800, token3: 600 },
+    { date: '2019-06', token1: 550, token2: 850, token3: 650 },
+    { date: '2019-07', token1: 500, token2: 900, token3: 700 },
+    { date: '2019-08', token1: 450, token2: 950, token3: 750 },
+    { date: '2019-09', token1: 400, token2: 1000, token3: 800 },
+    { date: '2019-10', token1: 350, token2: 1050, token3: 850 },
+    { date: '2019-11', token1: 300, token2: 1100, token3: 900 },
+    { date: '2019-12', token1: 250, token2: 1150, token3: 950 },
+    { date: '2020-01', token1: 200, token2: 1200, token3: 1000 },
+    { date: '2020-02', token1: 150, token2: 1250, token3: 1050 },
+    { date: '2020-03', token1: 100, token2: 1300, token3: 1100 },
+    { date: '2020-04', token1: 50, token2: 1350, token3: 1150 },
+    { date: '2020-05', token1: 0, token2: 1400, token3: 1200 },
+    { date: '2020-06', token1: -50, token2: 1450, token3: 1250 },
+    { date: '2020-07', token1: -100, token2: 1500, token3: 1300 },
+    { date: '2020-08', token1: -150, token2: 1550, token3: 1350 },
+    { date: '2020-09', token1: -200, token2: 1600, token3: 1400 },
+    { date: '2020-10', token1: -250, token2: 1650, token3: 1450 },
+    { date: '2020-11', token1: -300, token2: 1700, token3: 1500 },
+    { date: '2020-12', token1: -350, token2: 1750, token3: 1550 },
+    { date: '2021-01', token1: -400, token2: 1800, token3: 1600 },
+    { date: '2021-02', token1: -450, token2: 1850, token3: 1650 },
+    { date: '2021-03', token1: -500, token2: 1900, token3: 1700 },
+    { date: '2021-04', token1: -550, token2: 1950, token3: 1750 },
+    { date: '2021-05', token1: -600, token2: 2000, token3: 1800 },
+    { date: '2021-06', token1: -650, token2: 2050, token3: 1850 },
+    { date: '2021-07', token1: -700, token2: 2100, token3: 1900 },
+    { date: '2021-08', token1: -750, token2: 2150, token3: 1950 },
+    { date: '2021-09', token1: -800, token2: 2200, token3: 2000 },
+    { date: '2021-10', token1: -850, token2: 2250, token3: 2050 },
+    { date: '2021-11', token1: -900, token2: 2300, token3: 2100 },
+    { date: '2021-12', token1: -950, token2: 2350, token3: 2150 }
+  ],
+  tokens: [
+    { name: 'Solana', color: '#3B82F6', icon: '/svg/sample-token/Solana.svg' },
+    { name: 'Token 2', color: '#8B5CF6', icon: '/svg/sample-token/Bonk.svg' },
+    { name: 'Token 3', color: '#EC4899', icon: '/svg/sample-token/Usdc.svg' }
+  ]
+}
+
+export const SAMPLE_MONTHLY_TRANSACTION_DATA = {
+  chartData: [
+    { month: '2021-01', transactions: 12000 },
+    { month: '2021-02', transactions: 40000 },
+    { month: '2021-03', transactions: 15000 },
+    { month: '2021-04', transactions: 14250 },
+    { month: '2021-05', transactions: 32000 },
+    { month: '2021-06', transactions: 17000 },
+    { month: '2021-07', transactions: 16500 },
+    { month: '2021-08', transactions: 17500 },
+    { month: '2021-09', transactions: 18000 },
+    { month: '2021-10', transactions: 19000 },
+    { month: '2021-11', transactions: 29000 },
+    { month: '2021-12', transactions: 21000 },
+    { month: '2022-01', transactions: 22000 },
+    { month: '2022-02', transactions: 23000 },
+    { month: '2022-03', transactions: 24000 },
+    { month: '2022-04', transactions: 25000 },
+    { month: '2022-05', transactions: 24500 },
+    { month: '2022-06', transactions: 25500 },
+    { month: '2022-07', transactions: 26000 },
+    { month: '2022-08', transactions: 27000 },
+    { month: '2022-09', transactions: 28000 },
+    { month: '2022-10', transactions: 27500 },
+    { month: '2022-11', transactions: 28500 },
+    { month: '2022-12', transactions: 29500 },
+    { month: '2023-01', transactions: 32000 },
+    { month: '2023-02', transactions: 21000 },
+    { month: '2023-03', transactions: 35500 },
+    { month: '2023-04', transactions: 22500 },
+    { month: '2023-05', transactions: 39000 },
+    { month: '2023-06', transactions: 24000 },
+    { month: '2023-07', transactions: 42000 },
+    { month: '2023-08', transactions: 33000 },
+    { month: '2023-09', transactions: 46000 },
+    { month: '2023-10', transactions: 34500 },
+    { month: '2023-11', transactions: 48000 },
+    { month: '2023-12', transactions: 36000 },
+    { month: '2024-01', transactions: 50000 },
+    { month: '2024-02', transactions: 70000 },
+    { month: '2024-03', transactions: 52000 },
+    { month: '2024-04', transactions: 66000 },
+    { month: '2024-05', transactions: 54000 },
+    { month: '2024-06', transactions: 55500 },
+    { month: '2024-07', transactions: 56000 },
+    { month: '2024-08', transactions: 55000 },
+    { month: '2024-09', transactions: 53000 },
+    { month: '2024-10', transactions: 23500 },
+    { month: '2024-11', transactions: 50000 },
+    { month: '2024-12', transactions: 32000 },
+    { month: '2025-01', transactions: 47000 },
+    { month: '2025-02', transactions: 41000 },
+    { month: '2025-03', transactions: 49000 },
+    { month: '2025-04', transactions: 40500 },
+    { month: '2025-05', transactions: 52000 },
+    { month: '2025-06', transactions: 40000 },
+    { month: '2025-07', transactions: 54000 },
+    { month: '2025-08', transactions: 19500 }
+  ]
+}
+
+export const SAMPLE_ETH_PRICE_DATA = {
+  selectedToken: 'SOL',
+  chartData: []
+  // chartData: [
+  //   { date: '2019-01', price: 40000 },
+  //   { date: '2019-02', price: 42000 },
+  //   { date: '2019-03', price: 44000 },
+  //   { date: '2019-04', price: 46000 },
+  //   { date: '2019-05', price: 48000 },
+  //   { date: '2019-06', price: 50000 },
+  //   { date: '2019-07', price: 52000 },
+  //   { date: '2019-08', price: 54000 },
+  //   { date: '2019-09', price: 56000 },
+  //   { date: '2019-10', price: 58000 },
+  //   { date: '2019-11', price: 60000 },
+  //   { date: '2019-12', price: 62000 },
+  //   { date: '2020-01', price: 64000 },
+  //   { date: '2020-02', price: 66000 },
+  //   { date: '2020-03', price: 68000 },
+  //   { date: '2020-04', price: 70000 },
+  //   { date: '2020-05', price: 72000 },
+  //   { date: '2020-06', price: 74000 },
+  //   { date: '2020-07', price: 76000 },
+  //   { date: '2020-08', price: 78000 },
+  //   { date: '2020-09', price: 80000 },
+  //   { date: '2020-10', price: 82000 },
+  //   { date: '2020-11', price: 84000 },
+  //   { date: '2020-12', price: 86000 },
+  //   { date: '2021-01', price: 88000 },
+  //   { date: '2021-02', price: 90000 },
+  //   { date: '2021-03', price: 92000 },
+  //   { date: '2021-04', price: 94000 },
+  //   { date: '2021-05', price: 96000 },
+  //   { date: '2021-06', price: 98000 },
+  //   { date: '2021-07', price: 100000 },
+  //   { date: '2021-08', price: 102000 },
+  //   { date: '2021-09', price: 104000 },
+  //   { date: '2021-10', price: 106000 },
+  //   { date: '2021-11', price: 108000 },
+  //   { date: '2021-12', price: 110000 }
+  // ]
+}
+
+export const SAMPLE_TOKEN_VALUE_DATA = {
+  selectedFilter: 'All Tokens',
+  chartData: [
+    { period: '2019-Q1', value: 800 },
+    { period: '2019-Q2', value: 600 },
+    { period: '2019-Q3', value: 400 },
+    { period: '2019-Q4', value: 200 },
+    { period: '2020-Q1', value: 0 },
+    { period: '2020-Q2', value: -200 },
+    { period: '2020-Q3', value: -400 },
+    { period: '2020-Q4', value: -600 },
+    { period: '2021-Q1', value: -800 },
+    { period: '2021-Q2', value: -1000 },
+    { period: '2021-Q3', value: -800 },
+    { period: '2021-Q4', value: -600 },
+    { period: '2022-Q1', value: -400 },
+    { period: '2022-Q2', value: -200 },
+    { period: '2022-Q3', value: 0 },
+    { period: '2022-Q4', value: 200 },
+    { period: '2023-Q1', value: 400 },
+    { period: '2023-Q2', value: 600 },
+    { period: '2023-Q3', value: 800 },
+    { period: '2023-Q4', value: 1000 }
+  ]
+}
+
+export default {
+  walletOverview: SAMPLE_WALLET_OVERVIEW_DATA,
+  portfolioAnalysis: SAMPLE_PORTFOLIO_ANALYSIS_DATA,
+  monthlyTransaction: SAMPLE_MONTHLY_TRANSACTION_DATA,
+  ethPrice: SAMPLE_ETH_PRICE_DATA,
+  tokenValue: SAMPLE_TOKEN_VALUE_DATA
+}

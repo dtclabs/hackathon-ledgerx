@@ -1,0 +1,24 @@
+version: "3.8"
+services:
+  data_onchain_ingestor:
+    container_name: data_onchain_ingestor
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT}
+      AWS_ACCESS_KEY_ID: "test"
+      AWS_SECRET_ACCESS_KEY: "test"
+      AWS_DEFAULT_REGION: "us-east-1"
+      ACTION: ${ACTION}
+      AWS_S3_ALLOW_UNSAFE_RENAME: ${AWS_S3_ALLOW_UNSAFE_RENAME}
+      HYPERSYNC_ENDPOINT: ${HYPERSYNC_ENDPOINT}
+      ADDRESS_SYNC_WORKFLOW_TASK_QUEUE: ${ADDRESS_SYNC_WORKFLOW_TASK_QUEUE}
+      LAKEHOUSE_BUCKET: ${LAKEHOUSE_BUCKET}
+      CACHE_HOST: ${CACHE_HOST}
+      DATABASE_URI: ${DATABASE_URI}
+      SLACK_DEFAULT_CHANNEL: ${SLACK_DEFAULT_CHANNEL}
+      SLACK_TOKEN : ${SLACK_TOKEN}
+      WORKFLOW_SERVER_URI: ${WORKFLOW_SERVER_URI}
+      WORKFLOW_NAMESPACE: ${WORKFLOW_NAMESPACE}

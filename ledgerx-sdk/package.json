@@ -1,0 +1,16 @@
+{
+  "name": "ledgerx-sdk-generator",
+  "version": "1.0.0",
+  "description": "LedgerX SDK Generator",
+  "scripts": {
+    "generate:ts": "openapi-generator-cli generate -i openapi.yaml -g typescript-axios -o ./typescript-sdk --additional-properties=npmName=@ledgerx/sdk,npmVersion=1.0.0,supportsES6=true",
+    "generate:go": "openapi-generator-cli generate -i openapi.yaml -g go -o ./go-sdk --additional-properties=packageName=ledgerx,packageVersion=1.0.0",
+    "generate:all": "npm run generate:ts && npm run generate:go"
+  },
+  "devDependencies": {
+    "@openapitools/openapi-generator-cli": "^2.13.4"
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
+  }
+}

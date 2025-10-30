@@ -1,0 +1,5 @@
+.ag-theme-quartz {
+  --ag-row-hover-color: rgb(250, 249, 249);
+  --ag-active-color: rgb(250, 249, 249);
+  --ag-checkbox-checked-color: rgb(0, 0, 0);
+}

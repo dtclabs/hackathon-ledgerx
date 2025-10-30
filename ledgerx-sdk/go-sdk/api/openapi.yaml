@@ -1,0 +1,1611 @@
+openapi: 3.0.3
+info:
+  description: |
+    ## Introduction
+
+    The LedgerX API provides endpoints for synchronizing on-chain wallets, retrieving
+    normalized financial transactions, and managing wallets, wallet groups, organization
+    members, and the accounting system (Chart of Accounts).
+
+    - **Security**: All endpoints (unless otherwise specified) require an **API_KEY**
+      in the request header.
+    - **Rate Limit**: Depends on the user’s subscription plan. See details on the
+      subscriptions page.
+    - **Compute Unit (CU)**: Each API consumes a specific number of CUs, which are
+      deducted from your monthly total.
+
+    **Useful Links**:
+    - Rate limit: https://ledgerx.finance/subscriptions
+    - Compute Unit: https://ledgerx.finance/subscriptions
+
+    > Note: Some CU and rate limit descriptions are for documentation purposes only.
+    Actual limits are applied based on the user’s subscription plan.
+  title: LedgerX Public API
+  version: 1.0.0
+servers:
+- description: Production
+  url: https://api.ledgerx.finance
+- description: Sandbox
+  url: https://sandbox.api.ledgerx.finance
+security:
+- ApiKeyAuth: []
+tags:
+- description: Synchronize wallets and status
+  name: Sync
+- description: Normalized list of financial transactions
+  name: Financial Transactions
+- description: Manage wallets
+  name: Wallets
+- description: Manage wallet groups
+  name: Wallet Groups
+- description: Manage organization members and invitations
+  name: Members
+- description: Chart of Accounts and mapping
+  name: Chart of Accounts
+paths:
+  /sync:
+    get:
+      operationId: getSyncStatus
+      parameters:
+      - description: Sync job identifier
+        explode: true
+        in: query
+        name: jobId
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncGetResponse"
+          description: OK
+        "400":
+          description: Missing or invalid jobId
+      security:
+      - ApiKeyAuth: []
+      summary: Check sync job status
+      tags:
+      - Sync
+    post:
+      description: "Free for first 10,000 transactions, then costs **0.5 CU** per\
+        \ additional transaction."
+      operationId: createSyncJob
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SyncPostRequest"
+        required: true
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncPostResponse"
+          description: Sync job created
+      security:
+      - ApiKeyAuth: []
+      summary: Request to sync a wallet
+      tags:
+      - Sync
+  /sync/{jobId}:
+    put:
+      operationId: updateSyncJob
+      parameters:
+      - explode: false
+        in: path
+        name: jobId
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SyncPutRequest"
+        required: true
+      responses:
+        "204":
+          description: No Content
+      security:
+      - ApiKeyAuth: []
+      summary: Pause or continue a sync job
+      tags:
+      - Sync
+  /financial-transactions:
+    get:
+      operationId: listFinancialTransactions
+      parameters:
+      - explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 0
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 20
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FinancialTransactionsResponse"
+          description: OK
+      security:
+      - ApiKeyAuth: []
+      summary: List financial transactions (paginated)
+      tags:
+      - Financial Transactions
+  /wallets:
+    get:
+      operationId: listWallets
+      parameters:
+      - explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 0
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 20
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WalletListResponse"
+          description: OK
+      security:
+      - ApiKeyAuth: []
+      summary: Get list of wallets
+      tags:
+      - Wallets
+    post:
+      operationId: importWallets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/importWallets_request"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/importWallets_200_response"
+          description: Job IDs created for each wallet sync
+      security:
+      - ApiKeyAuth: []
+      summary: Import and sync wallets
+      tags:
+      - Wallets
+  /wallet-groups:
+    get:
+      operationId: listWalletGroups
+      parameters:
+      - explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 0
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 20
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/listWalletGroups_200_response"
+          description: OK
+      security:
+      - ApiKeyAuth: []
+      summary: List wallet groups (paginated)
+      tags:
+      - Wallet Groups
+    post:
+      operationId: createWalletGroup
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/createWalletGroup_request"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/listWalletGroups_200_response_data_inner"
+          description: Created
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new wallet group
+      tags:
+      - Wallet Groups
+  /wallet-groups/{id}:
+    put:
+      operationId: updateWalletGroup
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/updateWalletGroup_request"
+        required: true
+      responses:
+        "204":
+          description: No Content
+      security:
+      - ApiKeyAuth: []
+      summary: Update a wallet group
+      tags:
+      - Wallet Groups
+  /members:
+    get:
+      operationId: listMembers
+      parameters:
+      - explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 0
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: size
+        required: false
+        schema:
+          default: 20
+          type: integer
+        style: form
+      - description: Filter by state; leave empty to get all
+        explode: true
+        in: query
+        name: state
+        required: false
+        schema:
+          enum:
+          - active
+          - deactivated
+          - ""
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/listMembers_200_response"
+          description: OK
+      security:
+      - ApiKeyAuth: []
+      summary: List organization members (paginated)
+      tags:
+      - Members
+  /invitations:
+    post:
+      operationId: inviteMember
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/inviteMember_request"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/inviteMember_201_response"
+          description: Created
+      security:
+      - ApiKeyAuth: []
+      summary: Invite a new member
+      tags:
+      - Members
+  /deactivate/{id}:
+    put:
+      operationId: deactivateMember
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: No Content
+      security:
+      - ApiKeyAuth: []
+      summary: Deactivate a member
+      tags:
+      - Members
+  /chart-of-accounts-mappings:
+    get:
+      operationId: listCoaMappings
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/listCoaMappings_200_response"
+          description: OK
+      security:
+      - ApiKeyAuth: []
+      summary: List Chart of Accounts mappings
+      tags:
+      - Chart of Accounts
+  /chart-of-accounts:
+    get:
+      operationId: listChartOfAccounts
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/listChartOfAccounts_200_response"
+          description: OK
+      security:
+      - ApiKeyAuth: []
+      summary: List Chart of Accounts
+      tags:
+      - Chart of Accounts
+    post:
+      operationId: createChartOfAccount
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/createChartOfAccount_request"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/createChartOfAccount_201_response"
+          description: Created
+      security:
+      - ApiKeyAuth: []
+      summary: Create a Chart of Account
+      tags:
+      - Chart of Accounts
+  /chart-of-accounts/{coaId}:
+    put:
+      operationId: updateChartOfAccount
+      parameters:
+      - explode: false
+        in: path
+        name: coaId
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/updateChartOfAccount_request"
+        required: true
+      responses:
+        "204":
+          description: No Content
+      security:
+      - ApiKeyAuth: []
+      summary: Update a Chart of Account
+      tags:
+      - Chart of Accounts
+components:
+  schemas:
+    Pagination:
+      example:
+        totalItems: 2
+        totalPages: 7
+        limit: 3
+        currentPage: 9
+      properties:
+        totalItems:
+          format: int64
+          type: integer
+        totalPages:
+          type: integer
+        currentPage:
+          type: integer
+        limit:
+          type: integer
+      type: object
+    SyncStatus:
+      enum:
+      - DONE
+      - FAILED
+      - FETCHING_SIGNATURES
+      - FETCHING_TRANSACTIONS
+      type: string
+    SyncGetResponse:
+      example:
+        status: FETCHING_SIGNATURES
+        walletId: abc
+      properties:
+        status:
+          $ref: "#/components/schemas/SyncStatus"
+        walletId:
+          type: string
+      type: object
+    SyncPostRequest:
+      example:
+        walletId: abc
+      properties:
+        walletId:
+          type: string
+      required:
+      - walletId
+      type: object
+    SyncPostResponse:
+      example:
+        jobId: "123"
+      properties:
+        jobId:
+          type: string
+      type: object
+    SyncPutRequest:
+      example:
+        action: PAUSE
+      properties:
+        action:
+          enum:
+          - PAUSE
+          - SYNC
+          type: string
+      required:
+      - action
+      type: object
+    CryptocurrencyImage:
+      example:
+        small: https://openapi-generator.tech
+        large: https://openapi-generator.tech
+        thumb: https://openapi-generator.tech
+      properties:
+        large:
+          format: uri
+          type: string
+        small:
+          format: uri
+          type: string
+        thumb:
+          format: uri
+          type: string
+      type: object
+    Cryptocurrency:
+      example:
+        symbol: symbol
+        image:
+          small: https://openapi-generator.tech
+          large: https://openapi-generator.tech
+          thumb: https://openapi-generator.tech
+        addresses:
+        - addresses
+        - addresses
+        isVerified: true
+        name: name
+        publicId: publicId
+      properties:
+        name:
+          type: string
+        publicId:
+          type: string
+        symbol:
+          type: string
+        image:
+          $ref: "#/components/schemas/CryptocurrencyImage"
+        isVerified:
+          type: boolean
+        addresses:
+          items:
+            type: string
+          type: array
+      type: object
+    ContactAddress:
+      example:
+        address: address
+        blockchainId: blockchainId
+      properties:
+        address:
+          type: string
+        blockchainId:
+          nullable: true
+          type: string
+      type: object
+    Contact:
+      example:
+        organizationId: organizationId
+        addresses:
+        - address: address
+          blockchainId: blockchainId
+        - address: address
+          blockchainId: blockchainId
+        name: name
+        typeId: typeId
+        type: type
+      properties:
+        organizationId:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+        typeId:
+          type: string
+        addresses:
+          items:
+            $ref: "#/components/schemas/ContactAddress"
+          type: array
+      type: object
+    FinancialTransactionParent:
+      example:
+        activity: activity
+        exportStatus: exportStatus
+        valueTimestamp: 2000-01-23T04:56:07.000+00:00
+        childCount: 5
+        blockchainId: blockchainId
+        hash: hash
+        status: status
+      properties:
+        hash:
+          type: string
+        blockchainId:
+          type: string
+        activity:
+          type: string
+        status:
+          type: string
+        exportStatus:
+          type: string
+        valueTimestamp:
+          format: date-time
+          type: string
+        childCount:
+          type: integer
+      type: object
+    FinancialTransaction:
+      example:
+        fiatAmountPerUnit: 1.4658129805029452
+        note: note
+        correspondingChartOfAccount: correspondingChartOfAccount
+        type: type
+        toAddress: toAddress
+        fromContact:
+          organizationId: organizationId
+          addresses:
+          - address: address
+            blockchainId: blockchainId
+          - address: address
+            blockchainId: blockchainId
+          name: name
+          typeId: typeId
+          type: type
+        fromAddress: fromAddress
+        id: id
+        proxyAddress: proxyAddress
+        direction: direction
+        valueTimestamp: 2000-01-23T04:56:07.000+00:00
+        typeDetail:
+          label: label
+          value: value
+        cryptocurrency:
+          symbol: symbol
+          image:
+            small: https://openapi-generator.tech
+            large: https://openapi-generator.tech
+            thumb: https://openapi-generator.tech
+          addresses:
+          - addresses
+          - addresses
+          isVerified: true
+          name: name
+          publicId: publicId
+        toContact:
+          organizationId: organizationId
+          addresses:
+          - address: address
+            blockchainId: blockchainId
+          - address: address
+            blockchainId: blockchainId
+          name: name
+          typeId: typeId
+          type: type
+        financialTransactionParent:
+          activity: activity
+          exportStatus: exportStatus
+          valueTimestamp: 2000-01-23T04:56:07.000+00:00
+          childCount: 5
+          blockchainId: blockchainId
+          hash: hash
+          status: status
+        fiatAmount: 6.027456183070403
+        fiatCurrency: fiatCurrency
+        gainLoss: 5.962133916683182
+        substatuses:
+        - substatuses
+        - substatuses
+        costBasis: 0.8008281904610115
+        invoiceId: invoiceId
+        category: category
+        blockchainId: blockchainId
+        cryptocurrencyAmount: cryptocurrencyAmount
+        hash: hash
+        status: status
+      properties:
+        id:
+          type: string
+        hash:
+          type: string
+        blockchainId:
+          type: string
+        fromAddress:
+          nullable: true
+          type: string
+        toAddress:
+          nullable: true
+          type: string
+        proxyAddress:
+          nullable: true
+          type: string
+        cryptocurrency:
+          $ref: "#/components/schemas/Cryptocurrency"
+        cryptocurrencyAmount:
+          type: string
+        valueTimestamp:
+          format: date-time
+          type: string
+        type:
+          type: string
+        typeDetail:
+          $ref: "#/components/schemas/FinancialTransaction_typeDetail"
+        status:
+          type: string
+        substatuses:
+          items:
+            type: string
+          type: array
+        costBasis:
+          nullable: true
+          type: number
+        fiatAmount:
+          description: Fiat value (can be null if not available)
+          nullable: true
+          type: number
+        fiatAmountPerUnit:
+          nullable: true
+          type: number
+        fiatCurrency:
+          nullable: true
+          type: string
+        gainLoss:
+          nullable: true
+          type: number
+        direction:
+          nullable: true
+          type: string
+        note:
+          nullable: true
+          type: string
+        invoiceId:
+          nullable: true
+          type: string
+        category:
+          nullable: true
+          type: string
+        correspondingChartOfAccount:
+          nullable: true
+          type: string
+        financialTransactionParent:
+          $ref: "#/components/schemas/FinancialTransactionParent"
+        fromContact:
+          $ref: "#/components/schemas/Contact"
+        toContact:
+          $ref: "#/components/schemas/Contact"
+      type: object
+    FinancialTransactionsResponse:
+      example:
+        data:
+          pagination:
+            totalItems: 2
+            totalPages: 7
+            limit: 3
+            currentPage: 9
+          items:
+          - fiatAmountPerUnit: 1.4658129805029452
+            note: note
+            correspondingChartOfAccount: correspondingChartOfAccount
+            type: type
+            toAddress: toAddress
+            fromContact:
+              organizationId: organizationId
+              addresses:
+              - address: address
+                blockchainId: blockchainId
+              - address: address
+                blockchainId: blockchainId
+              name: name
+              typeId: typeId
+              type: type
+            fromAddress: fromAddress
+            id: id
+            proxyAddress: proxyAddress
+            direction: direction
+            valueTimestamp: 2000-01-23T04:56:07.000+00:00
+            typeDetail:
+              label: label
+              value: value
+            cryptocurrency:
+              symbol: symbol
+              image:
+                small: https://openapi-generator.tech
+                large: https://openapi-generator.tech
+                thumb: https://openapi-generator.tech
+              addresses:
+              - addresses
+              - addresses
+              isVerified: true
+              name: name
+              publicId: publicId
+            toContact:
+              organizationId: organizationId
+              addresses:
+              - address: address
+                blockchainId: blockchainId
+              - address: address
+                blockchainId: blockchainId
+              name: name
+              typeId: typeId
+              type: type
+            financialTransactionParent:
+              activity: activity
+              exportStatus: exportStatus
+              valueTimestamp: 2000-01-23T04:56:07.000+00:00
+              childCount: 5
+              blockchainId: blockchainId
+              hash: hash
+              status: status
+            fiatAmount: 6.027456183070403
+            fiatCurrency: fiatCurrency
+            gainLoss: 5.962133916683182
+            substatuses:
+            - substatuses
+            - substatuses
+            costBasis: 0.8008281904610115
+            invoiceId: invoiceId
+            category: category
+            blockchainId: blockchainId
+            cryptocurrencyAmount: cryptocurrencyAmount
+            hash: hash
+            status: status
+          - fiatAmountPerUnit: 1.4658129805029452
+            note: note
+            correspondingChartOfAccount: correspondingChartOfAccount
+            type: type
+            toAddress: toAddress
+            fromContact:
+              organizationId: organizationId
+              addresses:
+              - address: address
+                blockchainId: blockchainId
+              - address: address
+                blockchainId: blockchainId
+              name: name
+              typeId: typeId
+              type: type
+            fromAddress: fromAddress
+            id: id
+            proxyAddress: proxyAddress
+            direction: direction
+            valueTimestamp: 2000-01-23T04:56:07.000+00:00
+            typeDetail:
+              label: label
+              value: value
+            cryptocurrency:
+              symbol: symbol
+              image:
+                small: https://openapi-generator.tech
+                large: https://openapi-generator.tech
+                thumb: https://openapi-generator.tech
+              addresses:
+              - addresses
+              - addresses
+              isVerified: true
+              name: name
+              publicId: publicId
+            toContact:
+              organizationId: organizationId
+              addresses:
+              - address: address
+                blockchainId: blockchainId
+              - address: address
+                blockchainId: blockchainId
+              name: name
+              typeId: typeId
+              type: type
+            financialTransactionParent:
+              activity: activity
+              exportStatus: exportStatus
+              valueTimestamp: 2000-01-23T04:56:07.000+00:00
+              childCount: 5
+              blockchainId: blockchainId
+              hash: hash
+              status: status
+            fiatAmount: 6.027456183070403
+            fiatCurrency: fiatCurrency
+            gainLoss: 5.962133916683182
+            substatuses:
+            - substatuses
+            - substatuses
+            costBasis: 0.8008281904610115
+            invoiceId: invoiceId
+            category: category
+            blockchainId: blockchainId
+            cryptocurrencyAmount: cryptocurrencyAmount
+            hash: hash
+            status: status
+      properties:
+        data:
+          $ref: "#/components/schemas/FinancialTransactionsResponse_data"
+      type: object
+    WalletGroupRef:
+      example:
+        name: name
+        id: id
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+      type: object
+    Wallet:
+      example:
+        metadata: "{}"
+        address: address
+        lastSyncedAt: 2000-01-23T04:56:07.000+00:00
+        flaggedAt: 2000-01-23T04:56:07.000+00:00
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        balance: 0.8008281904610115
+        sourceType: sourceType
+        supportedBlockchains:
+        - supportedBlockchains
+        - supportedBlockchains
+        name: name
+        id: id
+        ownedCryptocurrencies: "{}"
+        group:
+          name: name
+          id: id
+        status: status
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        address:
+          type: string
+        sourceType:
+          type: string
+        flaggedAt:
+          format: date-time
+          nullable: true
+          type: string
+        group:
+          $ref: "#/components/schemas/WalletGroupRef"
+        balance:
+          nullable: true
+          type: number
+        status:
+          type: string
+        metadata:
+          nullable: true
+          type: object
+        lastSyncedAt:
+          format: date-time
+          nullable: true
+          type: string
+        createdAt:
+          format: date-time
+          type: string
+        supportedBlockchains:
+          items:
+            type: string
+          type: array
+        ownedCryptocurrencies:
+          type: object
+      type: object
+    WalletListResponse:
+      example:
+        data:
+          pagination:
+            totalItems: 2
+            totalPages: 7
+            limit: 3
+            currentPage: 9
+          items:
+          - metadata: "{}"
+            address: address
+            lastSyncedAt: 2000-01-23T04:56:07.000+00:00
+            flaggedAt: 2000-01-23T04:56:07.000+00:00
+            createdAt: 2000-01-23T04:56:07.000+00:00
+            balance: 0.8008281904610115
+            sourceType: sourceType
+            supportedBlockchains:
+            - supportedBlockchains
+            - supportedBlockchains
+            name: name
+            id: id
+            ownedCryptocurrencies: "{}"
+            group:
+              name: name
+              id: id
+            status: status
+          - metadata: "{}"
+            address: address
+            lastSyncedAt: 2000-01-23T04:56:07.000+00:00
+            flaggedAt: 2000-01-23T04:56:07.000+00:00
+            createdAt: 2000-01-23T04:56:07.000+00:00
+            balance: 0.8008281904610115
+            sourceType: sourceType
+            supportedBlockchains:
+            - supportedBlockchains
+            - supportedBlockchains
+            name: name
+            id: id
+            ownedCryptocurrencies: "{}"
+            group:
+              name: name
+              id: id
+            status: status
+      properties:
+        data:
+          $ref: "#/components/schemas/WalletListResponse_data"
+      type: object
+    MembersListItem:
+      example:
+        organizationId: organizationId
+        firstName: firstName
+        lastName: lastName
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        role: role
+        accountName: accountName
+        authName: authName
+        accountImage: accountImage
+        id: id
+      properties:
+        accountName:
+          type: string
+        authName:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        accountImage:
+          nullable: true
+          type: string
+        role:
+          type: string
+        createdAt:
+          format: date-time
+          type: string
+        id:
+          type: string
+        organizationId:
+          type: string
+      type: object
+    ChartOfAccountMapping:
+      example:
+        cryptocurrencyId: cryptocurrencyId
+        walletId: walletId
+        chartOfAccount: chartOfAccount
+        recipientId: recipientId
+        id: id
+        type: type
+        direction: direction
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        chartOfAccount:
+          nullable: true
+          type: string
+        walletId:
+          nullable: true
+          type: string
+        cryptocurrencyId:
+          nullable: true
+          type: string
+        recipientId:
+          nullable: true
+          type: string
+        direction:
+          nullable: true
+          type: string
+      type: object
+    importWallets_request:
+      example:
+        wallets:
+        - 2Yhn6rA3Kp4kt5BtRT5kWw2gmMBgY4L63JWXPyMr91TZ
+        - '...'
+      properties:
+        wallets:
+          items:
+            type: string
+          type: array
+      required:
+      - wallets
+      type: object
+    importWallets_200_response:
+      example:
+        jobIds:
+        - "123"
+        - "456"
+      properties:
+        jobIds:
+          items:
+            type: string
+          type: array
+      type: object
+    listWalletGroups_200_response_data_inner:
+      example:
+        supportedBlockchains:
+        - supportedBlockchains
+        - supportedBlockchains
+        name: name
+        id: id
+        walletsSize: 0
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        walletsSize:
+          type: integer
+        supportedBlockchains:
+          items:
+            type: string
+          type: array
+      type: object
+    listWalletGroups_200_response:
+      example:
+        data:
+        - supportedBlockchains:
+          - supportedBlockchains
+          - supportedBlockchains
+          name: name
+          id: id
+          walletsSize: 0
+        - supportedBlockchains:
+          - supportedBlockchains
+          - supportedBlockchains
+          name: name
+          id: id
+          walletsSize: 0
+      properties:
+        data:
+          items:
+            $ref: "#/components/schemas/listWalletGroups_200_response_data_inner"
+          type: array
+      type: object
+    createWalletGroup_request:
+      example:
+        name: Customized Group
+        supportedBlockchains:
+        - solana
+      properties:
+        name:
+          type: string
+        supportedBlockchains:
+          items:
+            type: string
+          type: array
+      required:
+      - name
+      - supportedBlockchains
+      type: object
+    updateWalletGroup_request:
+      example:
+        name: Customized Group 1
+      properties:
+        name:
+          type: string
+      required:
+      - name
+      type: object
+    listMembers_200_response_data:
+      example:
+        totalItems: 0
+        totalPages: 6
+        limit: 5
+        currentPage: 1
+        items:
+        - organizationId: organizationId
+          firstName: firstName
+          lastName: lastName
+          createdAt: 2000-01-23T04:56:07.000+00:00
+          role: role
+          accountName: accountName
+          authName: authName
+          accountImage: accountImage
+          id: id
+        - organizationId: organizationId
+          firstName: firstName
+          lastName: lastName
+          createdAt: 2000-01-23T04:56:07.000+00:00
+          role: role
+          accountName: accountName
+          authName: authName
+          accountImage: accountImage
+          id: id
+      properties:
+        totalItems:
+          type: integer
+        totalPages:
+          type: integer
+        currentPage:
+          type: integer
+        items:
+          items:
+            $ref: "#/components/schemas/MembersListItem"
+          type: array
+        limit:
+          type: integer
+      type: object
+    listMembers_200_response:
+      example:
+        data:
+          totalItems: 0
+          totalPages: 6
+          limit: 5
+          currentPage: 1
+          items:
+          - organizationId: organizationId
+            firstName: firstName
+            lastName: lastName
+            createdAt: 2000-01-23T04:56:07.000+00:00
+            role: role
+            accountName: accountName
+            authName: authName
+            accountImage: accountImage
+            id: id
+          - organizationId: organizationId
+            firstName: firstName
+            lastName: lastName
+            createdAt: 2000-01-23T04:56:07.000+00:00
+            role: role
+            accountName: accountName
+            authName: authName
+            accountImage: accountImage
+            id: id
+      properties:
+        data:
+          $ref: "#/components/schemas/listMembers_200_response_data"
+      type: object
+    inviteMember_request:
+      example:
+        address: null
+        firstName: Kien
+        lastName: Ngoc
+        role: Admin
+        email: kiendn@icloud.com
+        message: null
+      properties:
+        address:
+          nullable: true
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        role:
+          type: string
+        email:
+          format: email
+          type: string
+        message:
+          nullable: true
+          type: string
+      required:
+      - email
+      - firstName
+      - lastName
+      - role
+      type: object
+    inviteMember_201_response:
+      description: Response shape follows product payload
+      example:
+        data: "{}"
+      properties:
+        data:
+          type: object
+      type: object
+    listCoaMappings_200_response:
+      example:
+        data:
+        - cryptocurrencyId: cryptocurrencyId
+          walletId: walletId
+          chartOfAccount: chartOfAccount
+          recipientId: recipientId
+          id: id
+          type: type
+          direction: direction
+        - cryptocurrencyId: cryptocurrencyId
+          walletId: walletId
+          chartOfAccount: chartOfAccount
+          recipientId: recipientId
+          id: id
+          type: type
+          direction: direction
+      properties:
+        data:
+          items:
+            $ref: "#/components/schemas/ChartOfAccountMapping"
+          type: array
+      type: object
+    listChartOfAccounts_200_response_data_inner:
+      example:
+        code: code
+        name: name
+        description: description
+        id: id
+        type: type
+        status: status
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        code:
+          type: string
+        type:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+      type: object
+    listChartOfAccounts_200_response:
+      example:
+        data:
+        - code: code
+          name: name
+          description: description
+          id: id
+          type: type
+          status: status
+        - code: code
+          name: name
+          description: description
+          id: id
+          type: type
+          status: status
+      properties:
+        data:
+          items:
+            $ref: "#/components/schemas/listChartOfAccounts_200_response_data_inner"
+          type: array
+      type: object
+    createChartOfAccount_request:
+      example:
+        description: ""
+        code: "106"
+        name: Investment bonding
+        type: ASSET
+      properties:
+        description:
+          type: string
+        code:
+          type: string
+        name:
+          type: string
+        type:
+          enum:
+          - ASSET
+          - LIABILITY
+          - EQUITY
+          - REVENUE
+          - EXPENSE
+          type: string
+      required:
+      - code
+      - name
+      - type
+      type: object
+    createChartOfAccount_201_response:
+      example:
+        data:
+          code: code
+          name: name
+          description: description
+          id: id
+          type: type
+          status: status
+      properties:
+        data:
+          $ref: "#/components/schemas/listChartOfAccounts_200_response_data_inner"
+      type: object
+    updateChartOfAccount_request:
+      example:
+        code: "106"
+        name: Investment bonding 123
+        type: ASSET
+        description: ""
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        type:
+          enum:
+          - ASSET
+          - LIABILITY
+          - EQUITY
+          - REVENUE
+          - EXPENSE
+          type: string
+        description:
+          type: string
+      required:
+      - code
+      - name
+      - type
+      type: object
+    FinancialTransaction_typeDetail:
+      example:
+        label: label
+        value: value
+      properties:
+        value:
+          type: string
+        label:
+          type: string
+      type: object
+    FinancialTransactionsResponse_data:
+      example:
+        pagination:
+          totalItems: 2
+          totalPages: 7
+          limit: 3
+          currentPage: 9
+        items:
+        - fiatAmountPerUnit: 1.4658129805029452
+          note: note
+          correspondingChartOfAccount: correspondingChartOfAccount
+          type: type
+          toAddress: toAddress
+          fromContact:
+            organizationId: organizationId
+            addresses:
+            - address: address
+              blockchainId: blockchainId
+            - address: address
+              blockchainId: blockchainId
+            name: name
+            typeId: typeId
+            type: type
+          fromAddress: fromAddress
+          id: id
+          proxyAddress: proxyAddress
+          direction: direction
+          valueTimestamp: 2000-01-23T04:56:07.000+00:00
+          typeDetail:
+            label: label
+            value: value
+          cryptocurrency:
+            symbol: symbol
+            image:
+              small: https://openapi-generator.tech
+              large: https://openapi-generator.tech
+              thumb: https://openapi-generator.tech
+            addresses:
+            - addresses
+            - addresses
+            isVerified: true
+            name: name
+            publicId: publicId
+          toContact:
+            organizationId: organizationId
+            addresses:
+            - address: address
+              blockchainId: blockchainId
+            - address: address
+              blockchainId: blockchainId
+            name: name
+            typeId: typeId
+            type: type
+          financialTransactionParent:
+            activity: activity
+            exportStatus: exportStatus
+            valueTimestamp: 2000-01-23T04:56:07.000+00:00
+            childCount: 5
+            blockchainId: blockchainId
+            hash: hash
+            status: status
+          fiatAmount: 6.027456183070403
+          fiatCurrency: fiatCurrency
+          gainLoss: 5.962133916683182
+          substatuses:
+          - substatuses
+          - substatuses
+          costBasis: 0.8008281904610115
+          invoiceId: invoiceId
+          category: category
+          blockchainId: blockchainId
+          cryptocurrencyAmount: cryptocurrencyAmount
+          hash: hash
+          status: status
+        - fiatAmountPerUnit: 1.4658129805029452
+          note: note
+          correspondingChartOfAccount: correspondingChartOfAccount
+          type: type
+          toAddress: toAddress
+          fromContact:
+            organizationId: organizationId
+            addresses:
+            - address: address
+              blockchainId: blockchainId
+            - address: address
+              blockchainId: blockchainId
+            name: name
+            typeId: typeId
+            type: type
+          fromAddress: fromAddress
+          id: id
+          proxyAddress: proxyAddress
+          direction: direction
+          valueTimestamp: 2000-01-23T04:56:07.000+00:00
+          typeDetail:
+            label: label
+            value: value
+          cryptocurrency:
+            symbol: symbol
+            image:
+              small: https://openapi-generator.tech
+              large: https://openapi-generator.tech
+              thumb: https://openapi-generator.tech
+            addresses:
+            - addresses
+            - addresses
+            isVerified: true
+            name: name
+            publicId: publicId
+          toContact:
+            organizationId: organizationId
+            addresses:
+            - address: address
+              blockchainId: blockchainId
+            - address: address
+              blockchainId: blockchainId
+            name: name
+            typeId: typeId
+            type: type
+          financialTransactionParent:
+            activity: activity
+            exportStatus: exportStatus
+            valueTimestamp: 2000-01-23T04:56:07.000+00:00
+            childCount: 5
+            blockchainId: blockchainId
+            hash: hash
+            status: status
+          fiatAmount: 6.027456183070403
+          fiatCurrency: fiatCurrency
+          gainLoss: 5.962133916683182
+          substatuses:
+          - substatuses
+          - substatuses
+          costBasis: 0.8008281904610115
+          invoiceId: invoiceId
+          category: category
+          blockchainId: blockchainId
+          cryptocurrencyAmount: cryptocurrencyAmount
+          hash: hash
+          status: status
+      properties:
+        items:
+          items:
+            $ref: "#/components/schemas/FinancialTransaction"
+          type: array
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+      type: object
+    WalletListResponse_data:
+      example:
+        pagination:
+          totalItems: 2
+          totalPages: 7
+          limit: 3
+          currentPage: 9
+        items:
+        - metadata: "{}"
+          address: address
+          lastSyncedAt: 2000-01-23T04:56:07.000+00:00
+          flaggedAt: 2000-01-23T04:56:07.000+00:00
+          createdAt: 2000-01-23T04:56:07.000+00:00
+          balance: 0.8008281904610115
+          sourceType: sourceType
+          supportedBlockchains:
+          - supportedBlockchains
+          - supportedBlockchains
+          name: name
+          id: id
+          ownedCryptocurrencies: "{}"
+          group:
+            name: name
+            id: id
+          status: status
+        - metadata: "{}"
+          address: address
+          lastSyncedAt: 2000-01-23T04:56:07.000+00:00
+          flaggedAt: 2000-01-23T04:56:07.000+00:00
+          createdAt: 2000-01-23T04:56:07.000+00:00
+          balance: 0.8008281904610115
+          sourceType: sourceType
+          supportedBlockchains:
+          - supportedBlockchains
+          - supportedBlockchains
+          name: name
+          id: id
+          ownedCryptocurrencies: "{}"
+          group:
+            name: name
+            id: id
+          status: status
+      properties:
+        items:
+          items:
+            $ref: "#/components/schemas/Wallet"
+          type: array
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+      type: object
+  securitySchemes:
+    ApiKeyAuth:
+      description: API key created in **User Dashboard > API**.
+      in: header
+      name: API_KEY
+      type: apiKey

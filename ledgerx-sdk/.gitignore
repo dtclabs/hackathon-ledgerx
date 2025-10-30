@@ -1,0 +1,108 @@
+# Dependencies
+node_modules/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist/
+build/
+*.tgz
+
+# Lock files (optional - uncomment if you want to ignore)
+# package-lock.json
+# yarn.lock
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Go
+go.work
+go.work.sum
+
+# Temporary files
+*.tmp
+*.temp
+# LedgerX SDK Generator
+
+Generate TypeScript and Golang SDKs from LedgerX OpenAPI specification.
+
+## 📋 Table of Contents
+
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Generate SDKs](#generate-sdks)
+- [Usage](#usage)
+  - [TypeScript SDK](#typescript-sdk)
+  - [Go SDK](#go-sdk)
+- [Project Structure](#project-structure)
+- [API Documentation](#api-documentation)
+- [Development](#development)
+
+## 🔧 Prerequisites
+
+- Node.js >= 14.x
+- npm or yarn
+- Go >= 1.18 (for Go SDK)
+
+## 📦 Installation# LedgerX SDK Generator
+
+                 Generate TypeScript and Golang SDKs from LedgerX OpenAPI specification.
+
+                 ## 📋 Table of Contents
+
+                 - [Prerequisites](#prerequisites)
+                 - [Installation](#installation)
+                 - [Generate SDKs](#generate-sdks)
+                 - [Usage](#usage)
+                   - [TypeScript SDK](#typescript-sdk)
+                   - [Go SDK](#go-sdk)
+                 - [Project Structure](#project-structure)
+                 - [API Documentation](#api-documentation)
+                 - [Development](#development)
+
+                 ## 🔧 Prerequisites
+
+                 - Node.js >= 14.x
+                 - npm or yarn
+                 - Go >= 1.18 (for Go SDK)
+
+                 ## 📦 Installation# LedgerX SDK Generator
+
+                                  Generate TypeScript and Golang SDKs from LedgerX OpenAPI specification.
+
+                                  ## 📋 Table of Contents
+
+                                  - [Prerequisites](#prerequisites)
+                                  - [Installation](#installation)
+                                  - [Generate SDKs](#generate-sdks)
+                                  - [Usage](#usage)
+                                    - [TypeScript SDK](#typescript-sdk)
+                                    - [Go SDK](#go-sdk)
+                                  - [Project Structure](#project-structure)
+                                  - [API Documentation](#api-documentation)
+                                  - [Development](#development)
+
+                                  ## 🔧 Prerequisites
+
+                                  - Node.js >= 14.x
+                                  - npm or yarn
+                                  - Go >= 1.18 (for Go SDK)
+
+                                  ## 📦 Installation

@@ -1,0 +1,7 @@
+version: "3.8"
+services:
+  postgresql:
+    extends:
+      service: postgresql
+      file: data_onchain_ingestor_db_cache.yaml
+

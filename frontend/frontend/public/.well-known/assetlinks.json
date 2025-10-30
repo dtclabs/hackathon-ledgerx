@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.ledgerx",
+      "sha256_cert_fingerprints": [
+        "6C:6B:23:5F:6C:A3:91:BD:81:2C:62:3D:9B:17:93:8B:40:39:BB:34:0B:57:36:50:1B:96:56:F6:EA:68:81:77"
+      ]
+    }
+  }
+]

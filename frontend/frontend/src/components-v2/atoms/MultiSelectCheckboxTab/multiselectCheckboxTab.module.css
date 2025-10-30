@@ -1,0 +1,31 @@
+.inputWrapper {
+  @apply flex items-center rounded px-2.5 py-1.5 bg-grey-100 max-w-fit cursor-pointer;
+  position: relative;
+}
+
+.inputWrapper:has(input.multiselectCheckbox:checked) {
+  background: #e2e2e0;
+}
+
+.inputWrapper:has(input.multiselectCheckbox:checked) > .checkboxLabel {
+  font-weight: 600;
+}
+
+.inputWrapper:hover {
+  background: #e2e2e0;
+}
+
+.multiselectCheckbox {
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  z-index: 2;
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.checkboxLabel {
+  @apply flex items-center cursor-pointer;
+}

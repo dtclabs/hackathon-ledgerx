@@ -1,0 +1,21 @@
+version: "3.8"
+services:
+  postgresql:
+    image: postgres
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - ${POSTGRES_PORT}:5432
+    volumes:
+      - ${MOUNTED_DB_DIR}:/var/lib/postgresql/data
+      - ${INIT_DB_QUERY}:/docker-entrypoint-initdb.d/init.sql
+
+  redis:
+    image: redis
+    container_name: redis
+    ports:
+      - "6379:6379"

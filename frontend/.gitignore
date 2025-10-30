@@ -1,0 +1,14 @@
+.DS_Store
+**/.terraform
+**/.terraform.lock.hcl
+**/**.tfvars
+**/.idea
+
+.vscode
+.vercel
+
+lazygit
+lazygit.tar.gz
+.secret.env
+sample.csv
+storybook-static

@@ -1,0 +1,38 @@
+.chainSelector {
+  @apply flex items-center rounded px-2.5 py-1.5 bg-grey-100 max-w-fit cursor-pointer;
+}
+
+.chainSelector:hover > .checkbox {
+  @apply border-black-200;
+}
+
+.checkbox {
+  @apply appearance-none w-[1.125rem] h-[1.125rem] border rounded border-blanca-300 mr-2 bg-white cursor-pointer;
+}
+
+.checkbox:disabled {
+  @apply opacity-60;
+}
+.checkbox:checked {
+  background: #2d2d2c;
+  border: 1px solid #2d2d2c;
+  position: relative;
+}
+
+.checkbox:checked::after {
+  content: url('../../../../public/svg/check.svg');
+  color: white;
+  z-index: 2;
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  top: -4px;
+  left: 1px;
+  bottom: 0;
+  right: 0;
+}
+
+.label {
+  @apply flex items-center;
+  cursor: pointer !important;
+}

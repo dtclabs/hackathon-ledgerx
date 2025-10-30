@@ -1,0 +1,36 @@
+.inputWrapper {
+  @apply flex items-center rounded px-2.5 py-1.5 bg-grey-100 max-w-fit cursor-pointer;
+  position: relative;
+}
+
+.inputWrapper.disabledRadio {
+  cursor: not-allowed;
+  opacity: 80%;
+}
+
+.inputWrapper:hover:not(.disabledRadio) {
+  .radioButtonCustom {
+    @apply border-black-200;
+  }
+}
+
+.radioButtonCustom {
+  @apply appearance-none w-[1.25rem] h-[1.25rem] border rounded-full border-blanca-300 mr-2 bg-white cursor-pointer;
+}
+
+.radioButtonCustom:checked {
+  border: 6px solid #2d2d2c;
+  position: relative;
+}
+
+.radioButtonLabel {
+  @apply flex items-center cursor-pointer;
+}
+
+.inputWrapper.disabledRadio > .radioButtonCustom {
+  cursor: not-allowed;
+}
+
+.inputWrapper.disabledRadio > .radioButtonLabel {
+  cursor: not-allowed;
+}

@@ -1,0 +1,61 @@
+version: "3.8"
+services:
+  postgresql:
+    extends:
+      service: postgresql
+      file: data_onchain_ingestor_db_cache.yaml
+    network_mode: host
+
+  redis:
+    extends:
+      service: redis
+      file: data_onchain_ingestor_db_cache.yaml
+    network_mode: host
+
+  elasticsearch:
+    extends:
+      file: temporal.yaml
+      service: elasticsearch
+    network_mode: host
+
+  temporal-postgresql:
+    extends:
+      file: temporal.yaml
+      service: temporal-postgresql
+    network_mode: host
+
+  temporal:
+    extends:
+      service: temporal
+      file: temporal.yaml
+    network_mode: host
+
+  temporal-admin-tools:
+    extends:
+      service: temporal-admin-tools
+      file: temporal.yaml
+    network_mode: host
+
+  temporal-ui:
+    extends:
+      service: temporal-ui
+      file: temporal.yaml
+    network_mode: host
+
+  localstack:
+    extends:
+      service: localstack
+      file: s3_local.yaml
+    network_mode: host
+
+  data_onchain_ingestor:
+    extends:
+      service: data_onchain_ingestor
+      file: data_onchain_ingestor.yaml
+    depends_on:
+      - temporal
+      - localstack
+      - postgresql
+      - redis
+    network_mode: host
+

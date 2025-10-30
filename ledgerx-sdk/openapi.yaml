@@ -1,0 +1,909 @@
+openapi: 3.0.3
+info:
+  title: LedgerX Public API
+  version: 1.0.0
+  description: |
+    ## Introduction
+
+    The LedgerX API provides endpoints for synchronizing on-chain wallets, retrieving
+    normalized financial transactions, and managing wallets, wallet groups, organization
+    members, and the accounting system (Chart of Accounts).
+
+    - **Security**: All endpoints (unless otherwise specified) require an **API_KEY**
+      in the request header.
+    - **Rate Limit**: Depends on the user’s subscription plan. See details on the
+      subscriptions page.
+    - **Compute Unit (CU)**: Each API consumes a specific number of CUs, which are
+      deducted from your monthly total.
+
+    **Useful Links**:
+    - Rate limit: https://ledgerx.finance/subscriptions
+    - Compute Unit: https://ledgerx.finance/subscriptions
+
+    > Note: Some CU and rate limit descriptions are for documentation purposes only.
+    Actual limits are applied based on the user’s subscription plan.
+
+servers:
+  - url: https://api.ledgerx.finance
+    description: Production
+  - url: https://sandbox.api.ledgerx.finance
+    description: Sandbox
+
+security:
+  - ApiKeyAuth: []
+
+tags:
+  - name: Sync
+    description: Synchronize wallets and status
+  - name: Financial Transactions
+    description: Normalized list of financial transactions
+  - name: Wallets
+    description: Manage wallets
+  - name: Wallet Groups
+    description: Manage wallet groups
+  - name: Members
+    description: Manage organization members and invitations
+  - name: Chart of Accounts
+    description: Chart of Accounts and mapping
+
+paths:
+  /sync:
+    get:
+      tags: [Sync]
+      summary: Check sync job status
+      operationId: getSyncStatus
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: jobId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Sync job identifier
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncGetResponse'
+        '400':
+          description: Missing or invalid jobId
+    post:
+      tags: [Sync]
+      summary: Request to sync a wallet
+      description: Free for first 10,000 transactions, then costs **0.5 CU** per additional transaction.
+      operationId: createSyncJob
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncPostRequest'
+      responses:
+        '202':
+          description: Sync job created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncPostResponse'
+
+  /sync/{jobId}:
+    put:
+      tags: [Sync]
+      summary: Pause or continue a sync job
+      operationId: updateSyncJob
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncPutRequest'
+      responses:
+        '204':
+          description: No Content
+
+  /financial-transactions:
+    get:
+      tags: [Financial Transactions]
+      summary: List financial transactions (paginated)
+      operationId: listFinancialTransactions
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancialTransactionsResponse'
+
+  /wallets:
+    get:
+      tags: [Wallets]
+      summary: Get list of wallets
+      operationId: listWallets
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletListResponse'
+    post:
+      tags: [Wallets]
+      summary: Import and sync wallets
+      operationId: importWallets
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [wallets]
+              properties:
+                wallets:
+                  type: array
+                  items:
+                    type: string
+              example:
+                wallets: ['2Yhn6rA3Kp4kt5BtRT5kWw2gmMBgY4L63JWXPyMr91TZ', '...']
+      responses:
+        '200':
+          description: Job IDs created for each wallet sync
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobIds:
+                    type: array
+                    items:
+                      type: string
+                example:
+                  jobIds: ['123','456']
+
+  /wallet-groups:
+    get:
+      tags: [Wallet Groups]
+      summary: List wallet groups (paginated)
+      operationId: listWalletGroups
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        walletsSize:
+                          type: integer
+                        supportedBlockchains:
+                          type: array
+                          items:
+                            type: string
+    post:
+      tags: [Wallet Groups]
+      summary: Create a new wallet group
+      operationId: createWalletGroup
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, supportedBlockchains]
+              properties:
+                name:
+                  type: string
+                supportedBlockchains:
+                  type: array
+                  items:
+                    type: string
+              example:
+                name: Customized Group
+                supportedBlockchains: ['solana']
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  walletsSize:
+                    type: integer
+                  supportedBlockchains:
+                    type: array
+                    items:
+                      type: string
+
+  /wallet-groups/{id}:
+    put:
+      tags: [Wallet Groups]
+      summary: Update a wallet group
+      operationId: updateWalletGroup
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+              example:
+                name: Customized Group 1
+      responses:
+        '204':
+          description: No Content
+
+  /members:
+    get:
+      tags: [Members]
+      summary: List organization members (paginated)
+      operationId: listMembers
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: state
+          in: query
+          schema:
+            type: string
+            enum: [active, deactivated, '']
+          description: Filter by state; leave empty to get all
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      totalItems:
+                        type: integer
+                      totalPages:
+                        type: integer
+                      currentPage:
+                        type: integer
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/MembersListItem'
+                      limit:
+                        type: integer
+
+  /invitations:
+    post:
+      tags: [Members]
+      summary: Invite a new member
+      operationId: inviteMember
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [firstName, lastName, role, email]
+              properties:
+                address:
+                  type: string
+                  nullable: true
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                role:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                message:
+                  type: string
+                  nullable: true
+              example:
+                address: null
+                firstName: Kien
+                lastName: Ngoc
+                role: Admin
+                email: kiendn@icloud.com
+                message: null
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                description: Response shape follows product payload
+
+  /deactivate/{id}:
+    put:
+      tags: [Members]
+      summary: Deactivate a member
+      operationId: deactivateMember
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No Content
+
+  /chart-of-accounts-mappings:
+    get:
+      tags: [Chart of Accounts]
+      summary: List Chart of Accounts mappings
+      operationId: listCoaMappings
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ChartOfAccountMapping'
+
+  /chart-of-accounts:
+    get:
+      tags: [Chart of Accounts]
+      summary: List Chart of Accounts
+      operationId: listChartOfAccounts
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        code:
+                          type: string
+                        type:
+                          type: string
+                        description:
+                          type: string
+                        status:
+                          type: string
+    post:
+      tags: [Chart of Accounts]
+      summary: Create a Chart of Account
+      operationId: createChartOfAccount
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code, name, type]
+              properties:
+                description:
+                  type: string
+                code:
+                  type: string
+                name:
+                  type: string
+                type:
+                  type: string
+                  enum: [ASSET, LIABILITY, EQUITY, REVENUE, EXPENSE]
+              example:
+                description: ''
+                code: '106'
+                name: Investment bonding
+                type: ASSET
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      code:
+                        type: string
+                      type:
+                        type: string
+                      description:
+                        type: string
+                      status:
+                        type: string
+
+  /chart-of-accounts/{coaId}:
+    put:
+      tags: [Chart of Accounts]
+      summary: Update a Chart of Account
+      operationId: updateChartOfAccount
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: coaId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code, name, type]
+              properties:
+                code:
+                  type: string
+                name:
+                  type: string
+                type:
+                  type: string
+                  enum: [ASSET, LIABILITY, EQUITY, REVENUE, EXPENSE]
+                description:
+                  type: string
+              example:
+                code: '106'
+                name: Investment bonding 123
+                type: ASSET
+                description: ''
+      responses:
+        '204':
+          description: No Content
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: API_KEY
+      description: API key created in **User Dashboard > API**.
+
+  schemas:
+    Pagination:
+      type: object
+      properties:
+        totalItems:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+        currentPage:
+          type: integer
+        limit:
+          type: integer
+
+    SyncStatus:
+      type: string
+      enum: [DONE, FAILED, FETCHING_SIGNATURES, FETCHING_TRANSACTIONS]
+
+    SyncGetResponse:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/SyncStatus'
+        walletId:
+          type: string
+      example:
+        status: FETCHING_SIGNATURES
+        walletId: abc
+
+    SyncPostRequest:
+      type: object
+      required: [walletId]
+      properties:
+        walletId:
+          type: string
+      example:
+        walletId: abc
+
+    SyncPostResponse:
+      type: object
+      properties:
+        jobId:
+          type: string
+      example:
+        jobId: "123"
+
+    SyncPutRequest:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [PAUSE, SYNC]
+      example:
+        action: PAUSE
+
+    CryptocurrencyImage:
+      type: object
+      properties:
+        large:
+          type: string
+          format: uri
+        small:
+          type: string
+          format: uri
+        thumb:
+          type: string
+          format: uri
+
+    Cryptocurrency:
+      type: object
+      properties:
+        name:
+          type: string
+        publicId:
+          type: string
+        symbol:
+          type: string
+        image:
+          $ref: '#/components/schemas/CryptocurrencyImage'
+        isVerified:
+          type: boolean
+        addresses:
+          type: array
+          items:
+            type: string
+
+    ContactAddress:
+      type: object
+      properties:
+        address:
+          type: string
+        blockchainId:
+          type: string
+          nullable: true
+
+    Contact:
+      type: object
+      properties:
+        organizationId:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+        typeId:
+          type: string
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactAddress'
+
+    FinancialTransactionParent:
+      type: object
+      properties:
+        hash:
+          type: string
+        blockchainId:
+          type: string
+        activity:
+          type: string
+        status:
+          type: string
+        exportStatus:
+          type: string
+        valueTimestamp:
+          type: string
+          format: date-time
+        childCount:
+          type: integer
+
+    FinancialTransaction:
+      type: object
+      properties:
+        id:
+          type: string
+        hash:
+          type: string
+        blockchainId:
+          type: string
+        fromAddress:
+          type: string
+          nullable: true
+        toAddress:
+          type: string
+          nullable: true
+        proxyAddress:
+          type: string
+          nullable: true
+        cryptocurrency:
+          $ref: '#/components/schemas/Cryptocurrency'
+        cryptocurrencyAmount:
+          type: string
+        valueTimestamp:
+          type: string
+          format: date-time
+        type:
+          type: string
+        typeDetail:
+          type: object
+          properties:
+            value:
+              type: string
+            label:
+              type: string
+        status:
+          type: string
+        substatuses:
+          type: array
+          items:
+            type: string
+        costBasis:
+          type: number
+          nullable: true
+        fiatAmount:
+          type: number
+          nullable: true
+          description: "Fiat value (can be null if not available)"
+        fiatAmountPerUnit:
+          type: number
+          nullable: true
+        fiatCurrency:
+          type: string
+          nullable: true
+        gainLoss:
+          type: number
+          nullable: true
+        direction:
+          type: string
+          nullable: true
+        note:
+          type: string
+          nullable: true
+        invoiceId:
+          type: string
+          nullable: true
+        category:
+          type: string
+          nullable: true
+        correspondingChartOfAccount:
+          type: string
+          nullable: true
+        financialTransactionParent:
+          $ref: '#/components/schemas/FinancialTransactionParent'
+        fromContact:
+          $ref: '#/components/schemas/Contact'
+          nullable: true
+        toContact:
+          $ref: '#/components/schemas/Contact'
+          nullable: true
+
+    FinancialTransactionsResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/FinancialTransaction'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+
+    WalletGroupRef:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+
+    Wallet:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        address:
+          type: string
+        sourceType:
+          type: string
+        flaggedAt:
+          type: string
+          format: date-time
+          nullable: true
+        group:
+          $ref: '#/components/schemas/WalletGroupRef'
+        balance:
+          type: number
+          nullable: true
+        status:
+          type: string
+        metadata:
+          type: object
+          nullable: true
+        lastSyncedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        supportedBlockchains:
+          type: array
+          items:
+            type: string
+        ownedCryptocurrencies:
+          type: object
+
+    WalletListResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/Wallet'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+
+    MembersListItem:
+      type: object
+      properties:
+        accountName:
+          type: string
+        authName:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        accountImage:
+          type: string
+          nullable: true
+        role:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        id:
+          type: string
+        organizationId:
+          type: string
+
+    ChartOfAccountMapping:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        chartOfAccount:
+          type: string
+          nullable: true
+        walletId:
+          type: string
+          nullable: true
+        cryptocurrencyId:
+          type: string
+          nullable: true
+        recipientId:
+          type: string
+          nullable: true
+        direction:
+          type: string
+          nullable: true

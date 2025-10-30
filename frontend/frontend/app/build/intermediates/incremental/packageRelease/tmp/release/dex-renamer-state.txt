@@ -1,0 +1,4 @@
+#Wed Oct 29 17:16:53 ICT 2025
+base.0=/Users/trungnguyen/Working Space/hq-evm-frontend-main-pwa-3/frontend/app/build/intermediates/dex/release/minifyReleaseWithR8/classes.dex
+renamed.0=classes.dex
+path.0=classes.dex

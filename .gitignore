@@ -4,3 +4,34 @@
 **/**.tfvars
 **/.idea
 *.iml
+.env
+.env.*
+.secret.env
+.vscode/
+
+# Environment files with sensitive data
+frontend/frontend/.env.development
+frontend/frontend/.env.production
+**/node_modules/
+**/dist/
+**/build/
+
+# Sensitive files
+*.pem
+*.key
+*.crt
+.secret
+secrets/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# Cache
+.cache/
+*.cache

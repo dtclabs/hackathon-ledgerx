@@ -1,0 +1,1014 @@
+/* eslint-disable no-prototype-builtins */
+import React, { useState, useEffect, useMemo } from 'react'
+import { useRouter } from 'next/router'
+import { AuthenticatedView as View, Header } from '@/components-v2/templates/AuthenticatedView'
+import { useOrganizationId } from '@/utils/getOrganizationId'
+import Breadcrumb from '@/components-v2/atoms/Breadcrumb'
+import Link from 'next/link'
+import Image from 'next/legacy/image'
+import { SourceType } from '@/slice/wallets/wallet-types'
+import { useGetWalletByIdQuery, useGetWalletsQuery } from '@/slice/wallets/wallet-api'
+import Button from '@/components-v2/atoms/Button'
+import leftArrow from '@/public/svg/Dropdown.svg'
+import Typography from '@/components-v2/atoms/Typography'
+import WalletAddressActionButtons from '@/components-v2/molecules/WalletAddressActionButtons'
+import { IChainItem, ChainList } from '@/components-v2/molecules/ChainList/ChainList'
+import { orgSettingsSelector } from '@/slice/orgSettings/orgSettings-slice'
+import { useAppSelector } from '@/state'
+import { useDebounce } from '@/hooks/useDebounce'
+import { addMinutes, parseISO, format } from 'date-fns'
+import { toNearestDecimal } from '@/utils-v2/numToWord'
+import Loading from '@/components/Loading'
+import { Input } from '@/components-v2'
+import DeleteSourceModal from '../components/DeleteSourceModal/DeleteSourceModal'
+import EditModal from '../components/EditModal/EditModal'
+import { useGetAuthenticatedProfileQuery } from '@/api-v2/members-api'
+import { useGetAssetsQuery, useGetAssetCryptocurrenciesQuery } from '@/api-v2/assets-api'
+import redFlag from '@/public/svg/red-flag.svg'
+import { UnderlineTabs } from '@/components-v2/UnderlineTabs'
+import TabItem from '@/components/TabsComponent/TabItem'
+import SafeServiceClient from '@gnosis.pm/safe-service-client'
+import { ethers } from 'ethers'
+import ReactTooltip from 'react-tooltip'
+import EthersAdapter from '@gnosis.pm/safe-ethers-lib'
+import { toChecksumAddress, isValidAddress } from 'ethereumjs-util'
+import { log } from '@/utils-v2/logger'
+import { useGetAllContactsQuery } from '@/slice/contacts/contacts-api'
+import AddToContactsButton from '@/components-v2/molecules/AddToContactsButton'
+import { Alert } from '@/components/Alert'
+import AssetItem from './components/AssetItem/index'
+import { useGetBalanceForWalletByIdQuery } from '@/api-v2/balances-api'
+import MultiSelectCheckboxTab from '@/components-v2/atoms/MultiSelectCheckboxTab'
+import allChainsSvg from '@/public/svg/allChains.svg'
+import { supportedChainsSelector } from '@/slice/chains/chains-slice'
+import { selectChainIcons, selectNetworkRPCMap, selectSafeUrlMap } from '@/slice/chains/chain-selectors'
+import { add, isEmpty } from 'lodash'
+import warningTriangleIcon from '@/public/svg/icons/warning-icon-triangle.svg'
+import WalletAddress from '@/components-v2/molecules/WalletAddressCopy/WalletAddress'
+import { CHAIN_SHORT_NAMES } from '@/config-v2/constants'
+import { sortData } from '@/views/Assets-v2/components/AssetSort/data'
+import AssetsSort from '@/views/Assets-v2/components/AssetSort'
+import AssetsFilter from '@/views/Assets-v2/components/AssetsFilter'
+import { EmptyData } from '@/components-v2/molecules/EmptyData'
+import MoneyIcon from '@/public/svg/MoneyCircle.svg'
+import Assetsv2Loading from '@/views/Assets-v2/assetsv2Loading'
+import Walletv2Loading from './components/walletv2Loading'
+import { useWalletSync } from '@/hooks-v2/useWalletSync'
+
+export interface IIndividualChainAssetData {
+  blockChainId: string
+  totalUnits: string
+  totalCostBasis: string
+  totalCurrentFiatValue: string
+}
+
+interface ICryptoCurrencyAddress {
+  blockchainId: string
+  address: string
+  decimal: number
+  type: string
+}
+
+export interface ICryptoCurrency {
+  addresses: ICryptoCurrencyAddress[]
+  image: object[]
+  name: string
+  isVerified: boolean
+  publicId: string
+  symbol: string
+}
+
+export interface IAssetMapData {
+  name: string
+  symbol: string
+  imageUrl: string
+  currentFiatPrice: string
+  fiatCurrency: string
+  individualChainAssetData: IIndividualChainAssetData[]
+  cryptocurrency: ICryptoCurrency
+  totalUnits: string
+  totalCurrentFiatValue: string
+}
+
+export interface ISupportedChain {
+  id: string
+  isGrayedOut: boolean
+}
+
+export interface IAssetChainMapData {
+  [key: string]: ISupportedChain[]
+}
+
+const SETTING_TABS = [
+  {
+    key: 'balances',
+    name: 'Balances'
+  },
+  {
+    key: 'owners',
+    name: 'Owners'
+  }
+]
+
+const sumTokenValues = (items, key, blockChainIds) =>
+  items.reduce((sum, item) => {
+    // Check if the item has the key and if the key's value is a valid number
+    if (item.hasOwnProperty(key) && !Number.isNaN(parseFloat(item[key]))) {
+      // If blockChainId filter is applied, sum only matching items
+      if (blockChainIds.length === 0 || blockChainIds.includes(item.blockChainId)) {
+        return sum + parseFloat(item[key])
+      }
+    }
+    return sum
+  }, 0)
+
+const WalletDetail: React.FC = () => {
+  const organizationId = useOrganizationId()
+  const [walletChains, setWalletChains] = useState<IChainItem[]>([])
+  const [totalBalance, setTotalBalance] = useState<string>('')
+  const [createdAt, setCreatedAt] = useState<string>()
+  const NETWORK_RPC_MAP = useAppSelector(selectNetworkRPCMap)
+  const { isSyncing } = useWalletSync({ organisationId: organizationId })
+  const [assetMap, setAssetMap] = useState<Map<string, IAssetMapData>>()
+  const [safeError, setSafeError] = useState<string>()
+  const [visibleAssetMapKeys, setVisibleAssetsMapKey] = useState<string[]>()
+  const [showDeleteWalletConfirmationModal, setShowDeleteWalletConfirmationModal] = useState<boolean>(false)
+  const [showEditWalletModal, setShowEditWalletModal] = useState<boolean>(false)
+  const [isAssetsEmpty, setIsAssetsEmpty] = useState<boolean>(false)
+  const [areZeroValueAssetsHidden, setAreZeroValueAssetsHidden] = useState<boolean>(true)
+  const [hasZeroValueAssets, setHasZeroValueAssets] = useState<boolean>(false)
+  const [searchTermForAssets, setSearchTermForAssets] = useState<string>('')
+  const [areAllChainsSelected, setAreAllChainsSelected] = useState<boolean>(true)
+  const [filterChains, setFilterChains] = useState<string[]>([])
+  const [activeTab, setActiveTab] = useState<string>(SETTING_TABS[0].key)
+  const [safeOwners, setSafeOwners] = useState<string[]>()
+  const [balance, setBalance] = useState<number>(0)
+  const { debouncedValue: search } = useDebounce(searchTermForAssets, 300)
+  const supportedChains = useAppSelector(supportedChainsSelector)
+
+  const chainIcons = useAppSelector(selectChainIcons)
+  const router = useRouter()
+  const [sortBy, setSortBy] = useState(sortData[0])
+  const [filter, setFilter] = useState({ blockchainIds: [], walletIds: [], cryptocurrencyIds: [] })
+  const [isViewAll, setIsViewAll] = useState(true)
+  const safeServiceUrl = useAppSelector(selectSafeUrlMap)
+
+  const { data: assetCryto, isLoading: assetCrytoLoading } = useGetAssetCryptocurrenciesQuery(
+    {
+      orgId: organizationId,
+      blockchainIds: [],
+      params: {
+        walletIds: [router.query.walletId]
+      }
+    },
+    { skip: !organizationId }
+  )
+
+  const handleFilterByCryptoCurrency = (cryptocurrencyIds: any[]) => {
+    setFilter({ ...filter, cryptocurrencyIds })
+  }
+  const handleResetCryptoCurrencyFilter = () => {
+    setFilter({ ...filter, cryptocurrencyIds: [] })
+  }
+  const handleSort = (item) => {
+    setSortBy(item)
+  }
+  const cryptocurrenciesOptions = useMemo(
+    () =>
+      assetCryto?.length
+        ? assetCryto?.map((item) => ({
+            value: item.publicId,
+            label: item.symbol,
+            imageUrl: item.image.small
+          }))
+        : [],
+    [assetCryto]
+  )
+  const {
+    data: walletDetails,
+    isSuccess: isGetWalletDetailsSuccess,
+    isFetching: isGetWalletDetailsFetching,
+    isLoading,
+    isError: isWalletFetchError,
+    error: walletFetchError
+  } = useGetWalletByIdQuery(
+    {
+      orgId: organizationId,
+      walletId: router.query.walletId
+    },
+    { skip: !router.query.walletId }
+  )
+
+  const handleRedirectToWallets = () => {
+    router.push(`/${organizationId}/wallets/import`)
+  }
+
+  const {
+    timezone: timeZonesetting,
+    fiatCurrency: fiatCurrencySetting,
+    country: countrySetting
+  } = useAppSelector(orgSettingsSelector)
+
+  const { data: memberData } = useGetAuthenticatedProfileQuery(
+    { orgId: String(organizationId) },
+    { skip: !organizationId }
+  )
+
+  const {
+    data: walletAssets,
+    isFetching: isGetAssetsFetching,
+    isSuccess: isGetWalletAssetsSuccess
+  } = useGetAssetsQuery(
+    {
+      orgId: organizationId,
+      params: {
+        blockchainIds: filter.blockchainIds.length > 0 ? filter.blockchainIds?.map((chain) => chain.value) : null,
+        walletIds:
+          filter.walletIds.length > 0
+            ? filter.walletIds?.map((_wallet) => _wallet.value)
+            : [`${router.query.walletId}`],
+        cryptocurrencyIds:
+          filter.cryptocurrencyIds.length > 0
+            ? filter.cryptocurrencyIds?.map((cryptocurrency) => cryptocurrency.value)
+            : null,
+        nameOrSymbol: search
+      }
+    },
+    { skip: !router.query.walletId }
+  )
+
+  const [organizationContacts, setOrganizationContacts] = useState<Map<any, any>>()
+  const {
+    data: contacts,
+    isSuccess: isGetContactsSuccess,
+    isFetching
+  } = useGetAllContactsQuery(
+    {
+      orgId: organizationId,
+      params: {
+        size: 9999
+      }
+    },
+    { skip: !organizationId, refetchOnMountOrArgChange: true }
+  )
+
+  const { data: walletBalance } = useGetBalanceForWalletByIdQuery(
+    {
+      orgId: organizationId,
+      params: {
+        groupBy: 'blockchainId',
+        walletIds: [`${router.query.walletId}`]
+      }
+    },
+    { skip: !organizationId || !router.query.walletId }
+  )
+
+  const transformedBalanceObject = useMemo(() => {
+    const result = {}
+
+    if (!isEmpty(walletBalance)) {
+      const balancePerChain = walletBalance.groups
+      const totalWalletBalance = parseFloat(walletBalance.value)
+      Object.keys(balancePerChain).forEach((chain) => {
+        result[chain] = {
+          value: balancePerChain[chain].value,
+          ratio:
+            parseFloat(balancePerChain[chain].value) !== 0
+              ? (parseFloat(balancePerChain[chain].value) / totalWalletBalance) * 100
+              : 0
+        }
+      })
+    }
+
+    return result
+  }, [filterChains, walletBalance])
+
+  const filteredChainsUnavailableOnWallet = useMemo(() => {
+    if (!isEmpty(walletDetails) && filterChains.length > 0) {
+      if (!walletDetails.supportedBlockchains.includes(filterChains))
+        return filterChains.filter((chain) => !walletDetails.supportedBlockchains.includes(chain))
+    }
+
+    return []
+  }, [filterChains, walletDetails])
+
+  useEffect(() => {
+    if (!isEmpty(walletBalance) && !isEmpty(walletDetails)) {
+      if (walletDetails.sourceType === SourceType.GNOSIS) {
+        setBalance(parseFloat(walletBalance.value))
+      } else {
+        const balancePerChain = walletBalance.groups
+        let result = 0
+
+        Object.keys(balancePerChain)
+          .filter((chain) => (filterChains.length > 0 ? filterChains.includes(chain) : true))
+          .forEach((chain) => {
+            result += parseFloat(balancePerChain[chain].value)
+          })
+        setBalance(result)
+      }
+    }
+  }, [walletBalance, walletDetails, filterChains])
+
+  // Transform assets into a map for quicker access and data transformation
+  useEffect(() => {
+    if (!isGetAssetsFetching && isGetWalletAssetsSuccess) {
+      if (walletAssets.length > 0) {
+        // Calculate total wallet balance from assets
+        const totalWalletBalance = walletAssets.reduce((acc, asset) => acc + parseFloat(asset.totalCurrentFiatValue), 0)
+        setTotalBalance(toNearestDecimal(totalWalletBalance, countrySetting?.iso, 2))
+
+        const assetMapForState: Map<string, IAssetMapData> = new Map()
+
+        for (const asset of walletAssets) {
+          if (assetMapForState.has(asset.cryptocurrency.publicId)) {
+            const assetMapData = assetMapForState.get(asset.cryptocurrency.publicId)
+
+            if (areAllChainsSelected || filterChains.includes(asset.blockchainId)) {
+              assetMapForState.set(asset.cryptocurrency.publicId, {
+                ...assetMapData,
+                totalUnits: asset.totalUnits,
+                totalCurrentFiatValue: asset.totalCurrentFiatValue,
+                individualChainAssetData: [
+                  ...assetMapData.individualChainAssetData,
+                  {
+                    blockChainId: asset.blockchainId,
+                    totalUnits: asset.totalUnits,
+                    totalCostBasis: asset.totalCostBasis,
+                    totalCurrentFiatValue: asset.totalCurrentFiatValue
+                  }
+                ]
+              })
+            }
+          } else {
+            if (areAllChainsSelected || filterChains.includes(asset.blockchainId)) {
+              assetMapForState.set(asset.cryptocurrency.publicId, {
+                name: `${asset.cryptocurrency.name} (${asset.cryptocurrency.symbol})`,
+                symbol: asset.cryptocurrency.symbol,
+                imageUrl: asset.cryptocurrency.image.small,
+                currentFiatPrice: asset.currentFiatPrice,
+                fiatCurrency: asset.fiatCurrency,
+                cryptocurrency: asset.cryptocurrency,
+                totalUnits: asset.totalUnits,
+                totalCurrentFiatValue: asset.totalCurrentFiatValue,
+                individualChainAssetData: [
+                  {
+                    blockChainId: asset.blockchainId,
+                    totalUnits: asset.totalUnits,
+                    totalCostBasis: asset.totalCostBasis,
+                    totalCurrentFiatValue: asset.totalCurrentFiatValue
+                  }
+                ]
+              })
+            }
+          }
+        }
+
+        setAssetMap(assetMapForState)
+        const zeroValueAssets = [...assetMapForState.keys()].filter((assetKey) => {
+          const asset = assetMapForState.get(assetKey)
+          const totalCurrentFiatValue = asset.individualChainAssetData.reduce(
+            (acc, cur) => acc + parseFloat(cur.totalCurrentFiatValue),
+            0
+          )
+          return totalCurrentFiatValue === 0
+        })
+
+        // Abstract to a function
+        if (zeroValueAssets.length > 0) {
+          const visibleAssetMapKeysForState = [...assetMapForState.keys()].filter((assetKey) => {
+            const asset = assetMapForState.get(assetKey)
+            const totalCurrentFiatValue = asset.individualChainAssetData.reduce(
+              (acc, cur) => acc + parseFloat(cur.totalCurrentFiatValue),
+              0
+            )
+            return totalCurrentFiatValue !== 0
+          })
+          setVisibleAssetsMapKey(visibleAssetMapKeysForState)
+          setIsAssetsEmpty(false)
+          setHasZeroValueAssets(true)
+          setAreZeroValueAssetsHidden(true)
+        } else {
+          setVisibleAssetsMapKey([...assetMapForState.keys()])
+          setHasZeroValueAssets(false)
+          setIsAssetsEmpty(false)
+        }
+      } else {
+        setIsAssetsEmpty(true)
+      }
+    }
+  }, [isGetWalletAssetsSuccess, isGetAssetsFetching, walletAssets, searchTermForAssets, filterChains])
+
+  useEffect(() => {
+    if (assetMap?.size === 0) {
+      setIsAssetsEmpty(true)
+    }
+  }, [assetMap])
+
+  const assetChainsMap = useMemo(() => {
+    const ASSET_CHAIN_MAP: { [symbol: string]: ISupportedChain[] } = {}
+
+    walletAssets?.forEach((asset) => {
+      if (ASSET_CHAIN_MAP[asset?.cryptocurrency?.symbol]) {
+        if ((filterChains.length > 0 && filterChains.includes(asset.blockchainId)) || areAllChainsSelected) {
+          ASSET_CHAIN_MAP[asset?.cryptocurrency?.symbol] = [
+            ...ASSET_CHAIN_MAP[asset?.cryptocurrency?.symbol],
+            { id: asset?.blockchainId, isGrayedOut: false }
+          ]
+        } else {
+          ASSET_CHAIN_MAP[asset?.cryptocurrency?.symbol] = [
+            ...ASSET_CHAIN_MAP[asset?.cryptocurrency?.symbol],
+            { id: asset?.blockchainId, isGrayedOut: true }
+          ]
+        }
+      } else {
+        if ((filterChains.length > 0 && filterChains.includes(asset.blockchainId)) || areAllChainsSelected) {
+          ASSET_CHAIN_MAP[asset?.cryptocurrency?.symbol] = [{ id: asset?.blockchainId, isGrayedOut: false }]
+        } else {
+          ASSET_CHAIN_MAP[asset?.cryptocurrency?.symbol] = [{ id: asset?.blockchainId, isGrayedOut: true }]
+        }
+      }
+    })
+
+    return ASSET_CHAIN_MAP
+  }, [walletAssets, filterChains])
+
+  const assets = useMemo(() => {
+    const filteredList = visibleAssetMapKeys?.map((assetKey) => assetMap.get(assetKey))
+
+    const TEMP_SORT_MAP = {
+      1: 'totalCurrentFiatValue',
+      2: 'totalCurrentFiatValue',
+      3: 'totalUnits',
+      4: 'totalUnits'
+    }
+    const _sortKey = TEMP_SORT_MAP[sortBy.key]
+    const x = filteredList?.sort((a, b) => {
+      // Sum values for comparison based on sortBy
+      const aValue = sumTokenValues(a.individualChainAssetData, _sortKey, filterChains)
+      const bValue = sumTokenValues(b.individualChainAssetData, _sortKey, filterChains)
+      // Sorting logic
+      if (sortBy.key === '1' || sortBy.key === '3') {
+        return bValue - aValue
+      }
+      return aValue - bValue
+    })
+    return x
+  }, [visibleAssetMapKeys, isViewAll, sortBy, filterChains, areAllChainsSelected, filter])
+
+  useEffect(() => {
+    if (!isGetWalletDetailsFetching && isGetWalletDetailsSuccess) {
+      // Cleanup later - wallet chains
+      const walletsChains = walletDetails.supportedBlockchains
+      const walletsSupportedChainsData = supportedChains.filter((chain) => walletsChains.includes(chain.id))
+      setWalletChains(walletsSupportedChainsData) // Change this into a hook at least locally as this transformation is needed for asset data grid also
+
+      // Created at date transformation
+      if (walletDetails?.createdAt && timeZonesetting?.utcOffset) {
+        const parsedDateFromTimeStamp = parseISO(walletDetails.createdAt.slice(0, -1))
+        const finalConvertedDate = addMinutes(parsedDateFromTimeStamp, timeZonesetting?.utcOffset || 480)
+        setCreatedAt(format(finalConvertedDate, 'MMM dd, yyyy'))
+      }
+    }
+  }, [isGetWalletDetailsSuccess, isGetWalletDetailsFetching])
+
+  const safeService = useMemo(() => {
+    let service: SafeServiceClient
+    try {
+      // There will be only one chain for a safe as it will be selected
+      // when the safe is created
+      const chain = walletChains[0]
+      const chainSafeUrl = supportedChains.filter((chainObj) => chain.id === chainObj.id)[0].apiUrl
+      const serviceUrl = (chain && chainSafeUrl) || 'https://safe-transaction.gnosis.io'
+      const signer = new ethers.providers.JsonRpcProvider(NETWORK_RPC_MAP[chain.id][0]).getSigner()
+      const ethAdapter = new EthersAdapter({
+        ethers,
+        signer
+      })
+      service = new SafeServiceClient({
+        txServiceUrl: serviceUrl,
+        ethAdapter
+      })
+    } catch (error: any) {
+      log.error(
+        error?.message ?? 'Error while fetching safe info on Add Safe form',
+        ['Error while fetching safe info on Add Safe form'],
+        {
+          actualErrorObject: error
+        },
+        `${window.location.pathname}`
+      )
+    }
+    return service
+  }, [walletChains])
+
+  // get safe info
+  const getSafeOwners = async () => {
+    if (isGetWalletDetailsSuccess && walletDetails.address && safeService) {
+      try {
+        const result = await safeService.getSafeInfo(toChecksumAddress(walletDetails?.address))
+        setSafeOwners(result.owners) ///
+      } catch (error: any) {
+        setSafeError('Could not fetch safe details. You may try again later.')
+        log.error(
+          // @ts-ignore TS2339
+          error?.message ?? 'Error while fetching safe info',
+          ['Error while fetching safe info'],
+          {
+            actualErrorObject: error
+          },
+          `${window.location.pathname}`
+        )
+      }
+    }
+  }
+
+  useEffect(() => {
+    if (isGetWalletDetailsSuccess && safeService && walletDetails.sourceType === SourceType.GNOSIS) {
+      getSafeOwners()
+    }
+  }, [isGetWalletDetailsSuccess, safeService])
+
+  useEffect(() => {
+    if (!isFetching && isGetContactsSuccess) {
+      const contactsMap = new Map()
+      for (const contact of contacts) {
+        if (contact?.addresses.length > 0) {
+          contact.addresses.forEach((addressObj) => {
+            if (isValidAddress(addressObj.address)) {
+              contactsMap.set(toChecksumAddress(addressObj.address), contact.name)
+            }
+            contactsMap.set(addressObj.address, contact.name)
+          })
+        }
+      }
+      setOrganizationContacts(contactsMap)
+    }
+  }, [isFetching, isGetContactsSuccess])
+
+  const breadcrumbItems = [{ to: `/${organizationId}/wallets`, label: 'Wallets' }]
+
+  const handleChangeText = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTermForAssets(e.target.value)
+  }
+
+  // Possible optimization for later: Add all assets and toggle their css based on button selection
+  const handleToggleZeroValueAssets = () => {
+    if (areZeroValueAssetsHidden) {
+      setVisibleAssetsMapKey([...assetMap.keys()])
+      setAreZeroValueAssetsHidden(false)
+    } else {
+      setVisibleAssetsMapKey(
+        [...assetMap.keys()].filter((assetKey) => {
+          const asset = assetMap.get(assetKey)
+          const totalCurrentFiatValue = asset.individualChainAssetData.reduce(
+            (acc, cur) => acc + parseFloat(cur.totalCurrentFiatValue),
+            0
+          )
+          return totalCurrentFiatValue !== 0
+        })
+      )
+      setAreZeroValueAssetsHidden(true)
+    }
+  }
+
+  const handleAllChainSelect = () => {
+    setAreAllChainsSelected(true)
+    if (filterChains.length > 0) {
+      setFilterChains([])
+    }
+  }
+
+  const handleChainfilter = (chainIdSelected: string) => {
+    if (filterChains.includes(chainIdSelected)) {
+      const applyFilterArray = filterChains.filter((chain) => chain !== chainIdSelected)
+      setFilterChains(applyFilterArray)
+      if (applyFilterArray.length === 0) {
+        setAreAllChainsSelected(true)
+      }
+    } else {
+      setFilterChains([...filterChains, chainIdSelected])
+      setAreAllChainsSelected(false)
+    }
+  }
+
+  const getWalletMetaData = () => (
+    <div className="flex gap-48 mt-4">
+      {isGetAssetsFetching ? (
+        <Walletv2Loading walletDetail={isGetAssetsFetching} />
+      ) : (
+        <>
+          <div>
+            <Typography variant="overline" color="secondary">
+              Address
+            </Typography>
+            <div className="flex">
+              <WalletAddress split={5} address={walletDetails.address} color="primary" variant="caption">
+                <WalletAddress.Link address={walletDetails.address} options={walletChains} />
+                <WalletAddress.Copy address={walletDetails.address} />
+              </WalletAddress>
+            </div>
+          </div>
+          <div>
+            <Typography variant="overline" color="secondary">
+              Chain
+            </Typography>
+            <ChainList chains={walletChains} />
+          </div>
+          <div>
+            <Typography variant="overline" color="secondary">
+              Type
+            </Typography>
+            <Typography variant="caption">
+              {walletDetails.sourceType === SourceType.GNOSIS ? 'Safe' : 'EOA Wallet'}
+            </Typography>
+          </div>
+          <div>
+            <Typography variant="overline" color="secondary">
+              Wallet Group
+            </Typography>
+            <Typography variant="caption">{walletDetails?.group?.name}</Typography>
+          </div>
+          {createdAt && (
+            <div>
+              <Typography variant="overline" color="secondary">
+                Added On
+              </Typography>
+              <Typography variant="caption">{createdAt}</Typography>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+
+  const getWalletBalance = () => (
+    <div className="flex p-4 rounded-xl border border-grey-200 mt-4">
+      {!fiatCurrencySetting || !filterChains ? (
+        <Walletv2Loading balanceDetail />
+      ) : (
+        <>
+          <div className="pr-5 border-r min-w-[250px]">
+            <Typography variant="overline" color="secondary">
+              TOTAL BALANCE
+            </Typography>
+            <Typography variant="heading1">
+              {`${fiatCurrencySetting?.symbol}${toNearestDecimal(String(balance), countrySetting?.iso, 2)} ${
+                fiatCurrencySetting?.code
+              }`}
+            </Typography>
+          </div>
+          <div className="grow pl-5">
+            <div className="flex gap-[80px]">
+              {walletChains.map((chain) => (
+                <div
+                  key={`${chain.id}-data`}
+                  className={`${filterChains.length > 0 && !filterChains.includes(chain.id) && 'grayscale'} ${
+                    filterChains.length > 0 && !filterChains.includes(chain.id) && 'opacity-70'
+                  }`}
+                >
+                  <div className="flex gap-2">
+                    <Image src={chainIcons[chain.id]} width={14} height={14} className="rounded" />
+                    <Typography variant="overline" color="secondary">
+                      {CHAIN_SHORT_NAMES[chain.id]}
+                    </Typography>
+                  </div>
+                  <Typography variant="subtitle1">{`${fiatCurrencySetting?.symbol}${toNearestDecimal(
+                    transformedBalanceObject[chain.id]?.value ? String(transformedBalanceObject[chain.id].value) : '0',
+                    countrySetting?.iso,
+                    2
+                  )} ${fiatCurrencySetting?.code}`}</Typography>
+                  <Typography variant="caption">{`${
+                    transformedBalanceObject[chain.id]?.ratio && transformedBalanceObject[chain.id]?.ratio !== 0
+                      ? transformedBalanceObject[chain.id].ratio.toFixed(2)
+                      : 0
+                  }%`}</Typography>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  )
+
+  const getMessageForEmptyAssets = () => {
+    if (searchTermForAssets) {
+      return `No results found for "${searchTermForAssets}".`
+      /* eslint-disable no-else-return */
+    } else if (filterChains.length > 0) {
+      return 'There are no assets in the selected chain.'
+    }
+
+    return 'There are no assets in this wallet.'
+  }
+
+  const getCollapsibleAssets = () => {
+    /* We want to show the message if there is a search term for correct chain and there is a chain selected that is not in the wallet */
+    const conditionForEmptyAssets =
+      (isAssetsEmpty && filteredChainsUnavailableOnWallet.length > 0 && searchTermForAssets) ||
+      (isAssetsEmpty && filteredChainsUnavailableOnWallet.length === 0)
+
+    return (
+      <>
+        <div>
+          {/* <Typography variant="heading3">Assets</Typography> */}
+          {(!isAssetsEmpty || (isAssetsEmpty && searchTermForAssets !== '') || sortBy) && (
+            <div className="flex items-center justify-between">
+              {/* Search bar */}
+              <Header>
+                <Header.Left>
+                  <Header.Left.Title>Assets</Header.Left.Title>
+                </Header.Left>
+              </Header>
+              <div className="flex items-center gap-3">
+                <Input
+                  placeholder="Search by asset name or symbol"
+                  id="wallet-search"
+                  onChange={handleChangeText}
+                  value={searchTermForAssets}
+                  isSearch
+                  classNames="h-[34px] text-sm"
+                />
+                <AssetsSort sortBy={sortBy} onSort={handleSort} />
+                <AssetsFilter
+                  className="text-sm"
+                  width="w-[210px]"
+                  name="Asset"
+                  filter={filter.cryptocurrencyIds || []}
+                  options={cryptocurrenciesOptions}
+                  onApply={handleFilterByCryptoCurrency}
+                  onReset={handleResetCryptoCurrencyFilter}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+        {filteredChainsUnavailableOnWallet.length > 0 && (
+          <div className="border p-2.5 rounded-lg border-grey-200 flex items-center justify-between mt-4">
+            <div className="flex items-center gap-3">
+              <Image src={warningTriangleIcon} width={16} height={16} />
+              <Typography
+                variant="body2"
+                styleVariant="semibold"
+              >{`Asset information not available for ${supportedChains
+                .filter((chain) => filteredChainsUnavailableOnWallet.includes(chain.id))
+                .map((chain) => chain.name)
+                .join(',')}. Please edit the wallet to select this chain.`}</Typography>
+            </div>
+            <Button
+              height={32}
+              variant="grey"
+              onClick={() => router.push(`/${organizationId}/wallets/${router.query.walletId}/edit/eoa`)}
+              label="Edit Wallet"
+            >
+              Edit Wallet
+            </Button>
+          </div>
+        )}
+        {/* TODO: ABSTRACT THE BELOW INTO A COMPONENT */}
+
+        {isGetAssetsFetching ? (
+          <Assetsv2Loading value />
+        ) : (
+          <div className="mt-5 flex flex-col">
+            {!isAssetsEmpty &&
+              assets?.length > 0 &&
+              assets.map((assetKey) => {
+                const individualAssetData = assetKey
+                const assetChains = individualAssetData.individualChainAssetData.map((asset) => asset.blockChainId)
+                const supportedChainsData = supportedChains.filter((chain) => assetChains.includes(chain.id))
+
+                return (
+                  <AssetItem
+                    key={`${individualAssetData.name}`}
+                    asset={individualAssetData}
+                    supportedChains={supportedChainsData}
+                    assetChains={assetChainsMap[individualAssetData.symbol]}
+                  />
+                )
+              })}
+            {conditionForEmptyAssets && (
+              <div className="border p-3 rounded-lg border-grey-200">
+                <Typography variant="body2" styleVariant="semibold">
+                  {getMessageForEmptyAssets()}
+                </Typography>
+              </div>
+            )}
+            {hasZeroValueAssets && !isAssetsEmpty && (
+              <div className="flex items-center text-center mx-auto gap-2 mt-2 pr-6 justify-self-center">
+                <div className="text-xs font-medium">
+                  {areZeroValueAssetsHidden ? 'Show tokens with zero balance' : 'Hide tokens with zero balance'}
+                </div>
+                <Button
+                  variant="grey"
+                  classNames="text-[0.75rem]"
+                  onClick={handleToggleZeroValueAssets}
+                  height={24}
+                  label={areZeroValueAssetsHidden ? 'View All' : 'Hide All '}
+                />
+              </div>
+            )}
+          </div>
+        )}
+      </>
+    )
+  }
+  if (isWalletFetchError) {
+    return (
+      <div className="mt-16 flex h-screen justify-center">
+        <EmptyData>
+          <EmptyData.Icon icon={MoneyIcon} />
+          <EmptyData.Title>Wallet not found</EmptyData.Title>
+          <EmptyData.Subtitle>
+            Please import this wallet into our system to access its detailed information.
+          </EmptyData.Subtitle>
+          <EmptyData.CTA label="Import Wallet" onClick={handleRedirectToWallets} />
+        </EmptyData>
+      </div>
+    )
+  } else if (isLoading || !walletDetails) {
+    return <Loading dark title="Fetching Data" />
+  }
+  return (
+    <div className="bg-white p-4 rounded-lg sm:w-full">
+      <Header>
+        <div className="flex items-center">
+          <Button
+            variant="ghost"
+            height={24}
+            classNames="!h-[30px] p-[0.5rem]"
+            leadingIcon={<Image src={leftArrow} className="rotate-90 py-[20px]" height={10} width={10} />}
+            onClick={() => router.back()}
+          />
+          <Breadcrumb>
+            {breadcrumbItems.map(({ to, label }) => (
+              <Link key={to} href={to} legacyBehavior>
+                {label}
+              </Link>
+            ))}
+            <Link href={`${window.location.pathname}`} legacyBehavior>
+              <div className="flex items-center gap-4">
+                {walletDetails.flaggedAt && <Image src={redFlag} width={20} height={20} />}
+                <span>{walletDetails?.name}</span>
+              </div>
+            </Link>
+          </Breadcrumb>
+        </div>
+        <Header.Right>
+          <div className="flex gap-2" data-for="wallet-detail-cta" data-tip="wallet-detail-cta">
+            <Button
+              variant="ghostRed"
+              label="Delete"
+              height={32}
+              disabled={isSyncing}
+              onClick={() => setShowDeleteWalletConfirmationModal(true)}
+            />
+            <Button
+              variant="black"
+              label="Edit"
+              height={32}
+              disabled={isSyncing}
+              width="w-28"
+              onClick={(e) => {
+                e.stopPropagation()
+                if (walletDetails.sourceType === SourceType.GNOSIS) {
+                  router.push(`/${organizationId}/wallets/${walletDetails.id}/edit/safe`)
+                } else {
+                  router.push(`/${organizationId}/wallets/${walletDetails.id}/edit/eoa`)
+                }
+              }}
+            />
+          </div>
+          {isSyncing && (
+            <ReactTooltip
+              id="wallet-detail-cta"
+              borderColor="#eaeaec"
+              border
+              backgroundColor="white"
+              textColor="#111111"
+              effect="solid"
+              className="!opacity-100 !rounded-lg"
+              place="top"
+            >
+              Wallets are syncing. Please wait for the sync to complete before making changes.
+            </ReactTooltip>
+          )}
+        </Header.Right>
+      </Header>
+      <View.Content>
+        {walletDetails.sourceType === SourceType.GNOSIS && (
+          <UnderlineTabs
+            tabs={SETTING_TABS}
+            active={activeTab}
+            setActive={setActiveTab}
+            classNameBtn="font-semibold text-sm px-6 py-[10px]"
+            wrapperClassName=" border-b-[1px] border-grey-200"
+          >
+            <TabItem key={SETTING_TABS[0].key}>
+              <div className="mt-4">
+                {getWalletMetaData()}
+                {getWalletBalance()}
+                {getCollapsibleAssets()}
+              </div>
+            </TabItem>
+            <TabItem key={SETTING_TABS[1].key}>
+              <div className="mt-4">
+                {safeError && (
+                  <Alert variant="danger" className="mt-5 leading-6 font-medium py-3" fontSize="text-base">
+                    {safeError}
+                  </Alert>
+                )}
+                {safeOwners &&
+                  !safeError &&
+                  safeOwners.map((owner, index) => {
+                    const addressExistsInContacts = !!organizationContacts.get(owner)
+                    return (
+                      <div key={owner} className="bg-gray-50 rounded-lg p-4 mb-3 grid grid-cols-3 items-center">
+                        <Typography variant="body2">
+                          {addressExistsInContacts
+                            ? `${index + 1}. ${organizationContacts.get(owner)}`
+                            : `${index + 1}. Unknown Address`}
+                        </Typography>
+                        <div className="flex">
+                          <Typography variant="body2">{owner}</Typography>
+                          <WalletAddressActionButtons address={owner} />
+                        </div>
+                        {!addressExistsInContacts && (
+                          <div className="w-[fit-content] justify-self-end">
+                            <AddToContactsButton addressToAdd={owner} />
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+              </div>
+            </TabItem>
+          </UnderlineTabs>
+        )}
+        {walletDetails.sourceType !== SourceType.GNOSIS && (
+          <>
+            <div className="flex mb-5 gap-x-3">
+              <MultiSelectCheckboxTab
+                label="All Chains"
+                imageUrl={allChainsSvg}
+                id="allChainsFilter"
+                onChange={handleAllChainSelect}
+                checked={areAllChainsSelected}
+                checkboxGroupName="chainsFilter"
+              />
+              {supportedChains?.map((chain) => (
+                <MultiSelectCheckboxTab
+                  label={chain.name}
+                  imageUrl={chain.imageUrl}
+                  checked={filterChains.includes(chain.id)}
+                  onChange={() => handleChainfilter(chain.id)}
+                  checkboxGroupName="chainsFilter"
+                  id={chain.id}
+                  key={chain.id}
+                />
+              ))}
+            </div>
+            {getWalletMetaData()}
+            {getWalletBalance()}
+            {getCollapsibleAssets()}
+          </>
+        )}
+        {showDeleteWalletConfirmationModal && (
+          <DeleteSourceModal
+            walletSource={walletDetails}
+            onModalClose={() => setShowDeleteWalletConfirmationModal(false)}
+            showModal={showDeleteWalletConfirmationModal}
+            setShowModal={setShowDeleteWalletConfirmationModal}
+            option
+            onClose={() => setShowDeleteWalletConfirmationModal(false)}
+            title="Delete Wallet?"
+            description="All transactions and assets on this wallet will also be deleted. You can import this wallet again later."
+            acceptText="Delete Wallet"
+            declineText="Back"
+            memberData={memberData}
+          />
+        )}
+        {showEditWalletModal && (
+          <EditModal
+            source={walletDetails}
+            option
+            onEditModalClose={() => setShowEditWalletModal(false)}
+            showEditModal={showEditWalletModal}
+            setShowEditModal={setShowEditWalletModal}
+            onClose={() => setShowEditWalletModal(false)}
+            title="Edit Wallet Detail"
+            description="This edits your wallet name"
+            setDisable={() => console.log('')}
+            isLoading={isLoading}
+            acceptText="Save Change"
+            declineText="Back"
+            memberData={memberData}
+          />
+        )}
+      </View.Content>
+    </div>
+  )
+}
+
+export default WalletDetail
