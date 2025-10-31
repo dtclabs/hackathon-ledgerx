@@ -31,6 +31,7 @@ LedgerX provides a complete ecosystem for tracking, managing, and analyzing Sola
 ## 📁 Project Structure
 
 ### 🔧 Backend (`/backend`)
+
 **Core API and business logic layer**
 
 - **Technology Stack**: NestJS 8, TypeScript, PostgreSQL, TypeORM
@@ -44,6 +45,7 @@ LedgerX provides a complete ecosystem for tracking, managing, and analyzing Sola
   - RESTful API with comprehensive endpoints
 
 **Key Capabilities**:
+
 - ✅ Real-time Solana portfolio balance calculation
 - ✅ Advanced transaction filtering (wallet groups, tx hash, activity type)
 - ✅ Solana address support with case preservation
@@ -51,6 +53,7 @@ LedgerX provides a complete ecosystem for tracking, managing, and analyzing Sola
 - ✅ Comprehensive financial reporting
 
 ### 🎨 Frontend (`/frontend`)
+
 **Progressive Web Application with Seeker integration**
 
 - **Technology Stack**: Next.js, React, TypeScript, TailwindCSS
@@ -63,6 +66,7 @@ LedgerX provides a complete ecosystem for tracking, managing, and analyzing Sola
   - Seeker integration for enhanced UX
 
 **Key Features**:
+
 - 📱 Mobile-optimized PWA interface
 - 🔄 Real-time Solana data synchronization
 - 💼 Multi-wallet portfolio aggregation
@@ -70,6 +74,7 @@ LedgerX provides a complete ecosystem for tracking, managing, and analyzing Sola
 - 🔗 Seamless Solana connectivity
 
 ### 🔄 Data On-Chain Ingestor (`/data-onchain-ingestor`)
+
 **Real-time blockchain data processing engine**
 
 - **Technology Stack**: Python 3.12, FastAPI, Temporal.io, SQLAlchemy
@@ -77,6 +82,7 @@ LedgerX provides a complete ecosystem for tracking, managing, and analyzing Sola
 - **Monitoring**: Redis caching, Sentry error tracking
 
 **Core Functions**:
+
 - 🔍 **Backfill Operations**: Historical transaction data recovery
 - 📡 **Real-time Tracking**: Live Solana on-chain event monitoring
 - 💾 **Data Storage**: Structured financial transaction storage
@@ -84,6 +90,7 @@ LedgerX provides a complete ecosystem for tracking, managing, and analyzing Sola
 - 📈 **Performance**: Optimized data pipelines with caching
 
 ### 📦 SDK (`/ledgerx-sdk`)
+
 **Developer tools and client libraries**
 
 - **Multi-language Support**: TypeScript & Go SDKs
@@ -109,54 +116,59 @@ LedgerX provides a complete ecosystem for tracking, managing, and analyzing Sola
 ### Quick Setup
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd hackathon-ledgerx
    ```
 
 2. **Backend Setup**
+
    ```bash
    cd backend/backend
    yarn install
-   
+
    # Setup environment variables
    cp .env.example .env
    # Configure your PostgreSQL credentials in .env
-   
+
    # Run database migrations
    yarn migrate:up
-   
+
    # Start development server
    yarn start:dev
    ```
 
 3. **Frontend Setup**
+
    ```bash
    cd frontend/frontend
    yarn install
-   
+
    # Start development server
    npm run dev
    ```
 
 4. **Data Ingestor Setup**
+
    ```bash
    cd data-onchain-ingestor
-   
+
    # Install dependencies with Poetry
    poetry install
-   
+
    # Run the ingestor
    poetry run python -m data_onchain_ingestor.main
    ```
 
 5. **SDK Generation**
+
    ```bash
    cd ledgerx-sdk
-   
+
    # Generate TypeScript SDK
    npm run generate:ts
-   
+
    # Generate Go SDK
    npm run generate:go
    ```
@@ -166,21 +178,25 @@ LedgerX provides a complete ecosystem for tracking, managing, and analyzing Sola
 ## 🌟 Key Features
 
 ### 💰 Solana Portfolio Management
+
 - **Native Solana Support**: Seamlessly track SPL tokens and SOL across multiple wallets
 - **Real-time Balances**: Live portfolio valuation and balance tracking
 - **Gain/Loss Analytics**: Comprehensive P&L calculation with historical Solana data
 
 ### 🔄 Solana Transaction Processing
+
 - **Advanced Filtering**: Filter by wallet groups, transaction signatures, activity type
 - **Real-time Ingestion**: Live Solana blockchain event processing and storage
 - **Historical Backfill**: Complete Solana transaction history recovery
 
 ### 🛠️ Developer Experience
+
 - **RESTful APIs**: Comprehensive API endpoints with OpenAPI documentation
 - **Multi-language SDKs**: TypeScript and Go client libraries
 - **Postman Collections**: Pre-built API testing collections
 
 ### 🔐 Security & Performance
+
 - **Solana Address Integrity**: Proper case preservation for Solana base58 addresses
 - **Optimized Queries**: Efficient database operations with proper indexing
 - **Error Handling**: Comprehensive error tracking with Sentry integration
@@ -238,3 +254,9 @@ This project is licensed under the terms specified in the repository.
 ## 🎯 Project Goals
 
 LedgerX aims to provide the most comprehensive and developer-friendly platform for Solana portfolio management, combining real-time data processing, powerful analytics, and seamless Solana ecosystem integration in a single, cohesive platform.
+
+### 📱 Mobile App
+
+An Android APK version is available for testing.
+
+[Download the APK (Drive)](https://drive.google.com/drive/folders/1qVmce7o239aHGLI_29buwL_tCJwRinEo?usp=sharing)
